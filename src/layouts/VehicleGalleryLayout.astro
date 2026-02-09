@@ -1,4 +1,9 @@
 ---
+interface Props {
+  pageTitle?: string;
+}
+
+const { pageTitle: titleProp } = Astro.props;
 import { splitHeaderHtmlForSlot } from '../lib/inject-slot-into-header';
 
 const [headerResponse, footerResponse] = await Promise.all([
@@ -16,6 +21,14 @@ const slickScripts = `
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js" integrity="sha512-HGOnQO9+SP1V92SrtZfjqxxtLmVzqZpjFFekvzZVWoiASSQgSr4cw9Kqd2+l8Llp4Gm0G8GIFJ4ddwZilcdb8A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 `;
+
+const pageTitle = titleProp ?? 'Vehicle Gallery | Three Piece';
+
+if (headerHtml.includes('<title>')) {
+  headerHtml = headerHtml.replace(/<title>[\s\S]*?<\/title>/i, `<title>${pageTitle}</title>`);
+} else {
+  headerHtml = headerHtml.replace('</head>', `<title>${pageTitle}</title>\n\t</head>`);
+}
 
 headerHtml = headerHtml.replace('</head>', slickStyles + '\n\t</head>');
 headerHtml = headerHtml.replace('</body>', slickScripts + '\n\t</body>');

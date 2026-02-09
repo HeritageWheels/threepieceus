@@ -34,9 +34,16 @@ if (slug !== canonicalSlug) {
   return Astro.redirect(`/vehicle-gallery/${id}/${canonicalSlug}`);
 }
 
+const wheelFinish = vehicleData['wheel-finish'] ?? vehicleData['wheel-finish-name'] ?? '';
+const vehicle = [vehicleData?.year, vehicleData?.make, vehicleData?.model].filter(Boolean).join(' ');
+const wheels = [vehicleData?.['wheel-brand'], vehicleData?.['wheel-model']].filter(Boolean).join(' ');
+const tires = [vehicleData?.['tire-brand'], vehicleData?.['tire-model']].filter(Boolean).join(' ');
+const pageTitle = ([vehicle, wheels].filter(Boolean).join(' with ')
+  + (wheelFinish ? ` - ${wheelFinish}` : '')
+  + (tires ? ` and ${tires}` : '')).trim() || undefined;
 ---
 
-<VehicleGalleryLayout>
+<VehicleGalleryLayout pageTitle={pageTitle}>
 	<div id="vehicle-gallery-page">
 	<div class="container">
 		<div>
