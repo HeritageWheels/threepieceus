@@ -1,0 +1,211 @@
+$screen-large: 1261px; // 1
+$screen-tabletLarge: 900px;
+$screen-medium: 801px;
+$screen-small: 551px;
+
+.container {
+  max-width: 1230px;
+  padding: 0 15px;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 1261px) {
+  .container {
+    padding: 0 6rem;
+  }
+}
+
+#vehicle-gallery-page {
+  font-family: "Helvetica Neue", sans-serif;
+  @media screen and (max-width: $screen-tabletLarge) {
+    padding: 0 5rem;
+  }
+
+  @media screen and (max-width: $screen-small) {
+    padding: 0;
+  }
+
+  h3,
+  h4 {
+    margin: 0;
+  }
+
+  .vehicle-title {
+    font-size: 2.6rem;
+    margin: 0;
+    line-height: normal;
+    @media screen and (max-width: $screen-small) {
+      font-size: 2.4rem;
+      margin-top: 1rem;
+    }
+  }
+
+  .vehicle-wheel-info {
+    font-size: 1rem;
+    margin-top: 0;
+    line-height: normal;
+  }
+
+  .vehicle-gallery_container {
+    .vehicle-content {
+      display: flex;
+      gap: 2rem;
+      @media screen and (max-width: $screen-tabletLarge) {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+
+    .vehicle-image_container {
+      height: 500px;
+      background-color: rgba(180, 180, 179, 0.1);
+    }
+
+    .vehicle-information {
+      width: 100%;
+      .vehicle-tab {
+        display: flex;
+        flex-direction: column;
+        .content {
+          padding: 1.2rem 0;
+          h4 {
+            margin: 0;
+            font-size: 18px;
+            @media screen and (max-width: $screen-small) {
+              font-size: 1.1rem;
+            }
+          }
+        }
+      }
+
+      .wheel-tab,
+      .tire-tab,
+      .modification-tab {
+        display: flex;
+        flex-direction: column;
+
+        .content {
+          display: flex;
+          gap: 10rem;
+          padding: 1.2rem 0;
+          @media screen and (max-width: $screen-small) {
+            gap: 0;
+            justify-content: space-between;
+          }
+          h3,
+          h4 {
+            font-size: 18px;
+            @media screen and (max-width: $screen-small) {
+              font-size: 1.1rem;
+            }
+          }
+        }
+      }
+    }
+
+    .tab {
+      background-color: #1c1d21;
+      width: 100%;
+      h3 {
+        text-align: center;
+        color: #fff;
+        margin: 0;
+        font-size: 18px;
+        text-transform: uppercase;
+      }
+    }
+    .additional-details-tab {
+      .tab {
+        margin-bottom: 1rem;
+      }
+    }
+    .additional-details {
+      margin-top: 2rem;
+      p {
+        font-size: 1.1rem;
+        font-weight: 400;
+        @media screen and (max-width: $screen-small) {
+          font-size: 1rem;
+          margin: 1rem 0;
+        }
+      }
+    }
+
+    .year,
+    .make,
+    .model,
+    .brand,
+    .model,
+    .suspension,
+    .frontDiameter,
+    .frontWidth,
+    .frontOffset,
+    .rearDiameter,
+    .rearWidth,
+    .rearOffset,
+    .frontWheelSize,
+    .rearWheelSize,
+    .frontTireSize,
+    .rearTireSize,
+    .yearMakeModel,
+    .tireBrand,
+    .tireModel,
+    .fenderMods,
+    .stanceType,
+    .frontRubbing,
+    .frontSpacers,
+    .rearRubbing,
+    .rearSpacers,
+    .wheelBrand,
+    .wheelModel,
+    .ownerInstagram {
+      font-size: 18px;
+      color: #dfab26;
+      @media screen and (max-width: $screen-small) {
+        font-size: 0.9rem;
+      }
+    }
+
+    .slick-slider {
+      background-color: #1c1d21;
+      min-width: 50%;
+      width: 50%;
+      height: fit-content;
+      .slick-track {
+        display: flex;
+        align-items: center;
+        img {
+          max-height: 450px;
+          @media screen and (max-width: $screen-small) {
+            max-height: 250px;
+          }
+          object-fit: contain;
+          width: 100%;
+          margin: 0 auto;
+        }
+      }
+      .slick-dots {
+        bottom: 0;
+        background-color: #dfab26;
+      }
+      .slick-prev {
+        left: 1rem;
+        z-index: 1000;
+        @media screen and (max-width: $screen-small) {
+          left: 0.5rem;
+        }
+      }
+      .slick-next {
+        right: 1rem;
+        @media screen and (max-width: $screen-small) {
+          right: 0.5rem;
+        }
+      }
+
+      @media screen and (max-width: $screen-tabletLarge) {
+        width: 100%;
+      }
+    }
+  }
+}

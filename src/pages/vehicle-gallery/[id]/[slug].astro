@@ -1,0 +1,412 @@
+---
+import VehicleGalleryLayout from '../../../layouts/VehicleGalleryLayout.astro';
+import { getVehicleSlug } from '../../../lib/vehicle-slug';
+import '../vehicle-gallery.scss';
+
+const apiBaseUrl = 'https://threepieceus-api-h83mp.ondigitalocean.app';
+
+const fetchVehicleData = async (vehicleId: string | undefined) => {
+  const id = Number(vehicleId);
+  if (!id || !Number.isInteger(id)) return null;
+  try {
+    const response = await fetch(
+      `${apiBaseUrl}/fitment-gallery/approved/vehicle/${id}`
+    );
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+};
+
+const id = Astro.params.id;
+const slug = Astro.params.slug ?? '';
+
+const vehicleData = await fetchVehicleData(id);
+
+if (!vehicleData) {
+  return Astro.redirect('/vehicle-gallery/');
+}
+
+const canonicalSlug = getVehicleSlug(vehicleData);
+
+if (slug !== canonicalSlug) {
+  return Astro.redirect(`/vehicle-gallery/${id}/${canonicalSlug}`);
+}
+
+---
+
+<VehicleGalleryLayout>
+	<div id="vehicle-gallery-page">
+	<div class="container">
+		<div>
+		  <!-- <div class="breadcrumbs">{renderBreadcrumbs()}</div> -->
+		  <h1 class="vehicle-title">
+			{vehicleData?.year} {vehicleData?.make} {vehicleData?.model}
+		  </h1>
+		  <h5 class="vehicle-wheel-info">
+			{vehicleData?.["wheel-brand"]} {vehicleData?.["wheel-model"]} -{" "}
+			{vehicleData?.["tire-brand"]}
+			{vehicleData?.["tire-model"]}
+		  </h5>	
+		</div>
+		<div class="vehicle-gallery_container">
+		  <div class="vehicle-content">
+			<div class="single-item">
+				{[1, 2, 3, 4, 5]
+					.filter((number) => vehicleData?.[`image-${number}`])
+					.map((number) => (
+						<div>
+							<img src={vehicleData?.[`image-${number}`]} alt="" />
+						</div>
+					))}
+			</div>
+  
+			<div class="vehicle-information">
+			  <div class="vehicle-tab">
+				<div class="tab">
+				  <h3>Vehicle</h3>
+				</div>
+				<div class="content">
+				  <h4>
+					Year: <span class="year">{vehicleData?.year}</span>
+				  </h4>
+				  <h4>
+					Make: <span class="make">{vehicleData?.make}</span>
+				  </h4>
+				  <h4>
+					Model: <span class="model">{vehicleData?.model}</span>
+				  </h4>
+				  <h4>
+					Owner:{" "}
+					<a
+					  class="ownerInstagram"
+					  target="_blank"
+					  rel="nofollow"
+					  href={`https://www.instagram.com/${vehicleData?.instagramHandle?.replace?.(
+						"@",
+						""
+					  ) ?? ''}`}
+					>
+					  {vehicleData?.instagramHandle}
+					</a>
+				  </h4>
+				</div>
+			  </div>
+			  <div class="wheel-tab">
+				<div class="tab">
+				  <h3>Wheels</h3>
+				</div>
+				<div class="content">
+				  <div>
+					<h3>
+					  Front:{" "}
+					  <span class="frontWheelSize">
+						{vehicleData?.["front-diameter"]}x
+						{vehicleData?.["front-width"]}
+					  </span>
+					</h3>
+					<h4>
+					  Brand:{" "}
+					  <span class="wheelBrand">
+						{vehicleData?.["wheel-brand"]}
+					  </span>
+					</h4>
+					<h4>
+					  Model:{" "}
+					  <span class="wheelModel">
+						{vehicleData?.["wheel-model"]}
+					  </span>
+					</h4>
+					<h4>
+					  Diameter:{" "}
+					  <span class="frontDiameter">
+						{vehicleData?.["front-diameter"]}
+					  </span>
+					</h4>
+					<h4>
+					  Width:{" "}
+					  <span class="frontWidth">
+						{vehicleData?.["front-width"]}
+					  </span>
+					</h4>
+					<h4>
+					  Offset:{" "}
+					  <span class="frontOffset">
+						{vehicleData?.["front-offset"]}
+					  </span>
+					</h4>
+				  </div>
+				  <div>
+					<h3>
+					  Rear:{" "}
+					  <span class="rearWheelSize">
+						{vehicleData?.["rear-diameter"]}x
+						{vehicleData?.["rear-width"]}
+					  </span>
+					</h3>
+					<h4>
+					  Diameter:{" "}
+					  <span class="rearDiameter">
+						{vehicleData?.["rear-diameter"]}
+					  </span>
+					</h4>
+					<h4>
+					  Width:{" "}
+					  <span class="rearWidth">
+						{vehicleData?.["rear-width"]}
+					  </span>
+					</h4>
+					<h4>
+					  Offset:{" "}
+					  <span class="rearOffset">
+						{vehicleData?.["rear-offset"]}
+					  </span>
+					</h4>
+				  </div>
+				</div>
+			  </div>
+			  <div class="tire-tab">
+				<div class="tab">
+				  <h3>Tires</h3>
+				</div>
+				<div class="content">
+				  <div>
+					<h3>
+					  Front:{" "}
+					  <span class="frontTireSize">
+						{vehicleData?.["front-tire-size"]}/
+						{vehicleData?.["front-aspect-ratio"]}
+					  </span>
+					</h3>
+					<h4>
+					  Brand:{" "}
+					  <span class="tireBrand">
+						{vehicleData?.["tire-brand"]}
+					  </span>
+					</h4>
+					<h4>
+					  Model:{" "}
+					  <span class="tireModel">
+						{vehicleData?.["tire-model"]}
+					  </span>
+					</h4>
+				  </div>
+				  <div>
+					<h3>
+					  Rear:{" "}
+					  <span class="rearTireSize">
+						{vehicleData?.["rear-tire-size"]}/
+						{vehicleData?.["rear-aspect-ratio"]}
+					  </span>
+					</h3>
+					<h4>
+					  Brand:{" "}
+					  <span class="tireBrand">
+						{vehicleData?.["tire-brand"]}
+					  </span>
+					</h4>
+					<h4>
+					  Model:{" "}
+					  <span class="tireModel">
+						{vehicleData?.["tire-model"]}
+					  </span>
+					</h4>
+				  </div>
+				</div>
+			  </div>
+			  <div class="modification-tab">
+				<div class="tab">
+				  <h3>Modifications</h3>
+				</div>
+				<div class="content">
+				  <div>
+					<h4>
+					  Suspension:{" "}
+					  <span class="suspension">
+						{vehicleData?.["suspension-type"]}
+					  </span>
+					</h4>
+					<h4>
+					  Stance:{" "}
+					  <span class="stanceType">
+						{vehicleData?.["stance"]}
+					  </span>
+					</h4>
+					<h4>
+					  Rubbing:{" "}
+					  <span class="frontRubbing">
+						{vehicleData?.["front-rubbing"]}
+					  </span>
+					</h4>
+					<h4>
+					  Spacers:{" "}
+					  <span class="frontSpacers">
+						{vehicleData?.["front-spacer"]}
+					  </span>
+					</h4>
+				  </div>
+				  <div>
+					<h4>
+					  Rubbing:{" "}
+					  <span class="rearRubbing">
+						{vehicleData?.["rear-rubbing"]}
+					  </span>
+					</h4>
+					<h4>
+					  Spacers:{" "}
+					  <span class="rearSpacers">
+						{vehicleData?.["rear-spacer"]}
+					  </span>
+					</h4>
+				  </div>
+				</div>
+			  </div>
+			</div>
+		  </div>
+		  <div class="additional-details">
+			<div class="additional-details-tab">
+			  <div class="tab">
+				<h3>Additional Information</h3>
+			  </div>
+			  <div class="content">
+				<p>
+				  You're here because you want to know what wheels fit onto a{" "}
+				  <span class="yearMakeModel">
+					{vehicleData?.["year"]} {vehicleData?.["make"]}{" "}
+					{vehicleData?.["model"]}
+				  </span>{" "}
+				  right? This{" "}
+				  <span class="yearMakeModel">
+					{vehicleData?.["year"]} {vehicleData?.["make"]}{" "}
+					{vehicleData?.["model"]}
+				  </span>{" "}
+				  is running a set of{" "}
+				  <span class="frontDiameter">
+					{vehicleData?.["front-diameter"]}
+				  </span>
+				  x
+				  <span class="frontWidth">
+					{vehicleData?.["front-width"]}
+				  </span>{" "}
+				  <span class="frontOffset">
+					{vehicleData?.["front-offset"]}
+				  </span>{" "}
+				  <span class="wheelBrand">
+					{vehicleData?.["wheel-brand"]}
+				  </span>{" "}
+				  <span class="wheelModel">
+					{vehicleData?.["wheel-model"]}
+				  </span>{" "}
+				  and{" "}
+				  <span class="rearDiameter">
+					{vehicleData?.["rear-diameter"]}
+				  </span>
+				  x
+				  <span class="rearWidth">{vehicleData?.["rear-width"]}</span>{" "}
+				  <span class="rearOffset">
+					{vehicleData?.["rear-offset"]}
+				  </span>{" "}
+				  with{" "}
+				  <span class="frontTireSize">
+					{vehicleData?.["front-tire-size"]}/
+					{vehicleData?.["front-aspect-ratio"]}R
+				  </span>
+				  <span class="frontDiameter">
+					{vehicleData?.["front-diameter"]}
+				  </span>
+				  <span class="tireBrand">
+					{" "}
+					{vehicleData?.["tire-brand"]}
+				  </span>{" "}
+				  in the front and{" "}
+				  <span class="rearTireSize">
+					{vehicleData?.["rear-tire-size"]}/
+					{vehicleData?.["rear-aspect-ratio"]}R
+				  </span>
+				  <span class="rearDiameter">
+					{vehicleData?.["rear-diameter"]}
+				  </span>{" "}
+				  in the rear.
+				</p>
+				<p>
+				  This vehicle is on{" "}
+				  <span class="suspension">
+					{vehicleData?.["suspension-type"]}
+				  </span>{" "}
+				  <span class="suspension">
+					{vehicleData?.["suspension-brand"]}
+				  </span>{" "}
+				  and as for spacers, this{" "}
+				  <span class="yearMakeModel">
+					{vehicleData?.["year"]} {vehicleData?.["make"]}{" "}
+					{vehicleData?.["model"]}
+				  </span>{" "}
+				  is running{" "}
+				  <span class="frontSpacers">
+					{vehicleData?.["front-spacer"]}
+				  </span>{" "}
+				  spacers in the front and{" "}
+				  <span class="rearSpacers">
+					{vehicleData?.["rear-spacer"]}
+				  </span>{" "}
+				  spacers in the rear.
+				</p>
+				<p>
+				  With this setup there is{" "}
+				  <span class="frontRubbing">
+					{vehicleData?.["front-rubbing"]}
+				  </span>{" "}
+				  in the front and{" "}
+				  <span class="rearRubbing">
+					{vehicleData?.["rear-rubbing"]}
+				  </span>{" "}
+				  in the rear. Now, as for fitment - this{" "}
+				  <span class="yearMakeModel">
+					{vehicleData?.["year"]} {vehicleData?.["make"]}{" "}
+					{vehicleData?.["model"]}
+				  </span>{" "}
+				  has{" "}
+				  <span class="stanceType">{vehicleData?.["stance"]}</span>{" "}
+				  fitment which we think looks great! Want the same setup for your
+				  ride? Check out the exact wheels, tires, and suspension this
+				  build is running below and if you like their car, be sure to
+				  follow them on their IG and upvote this build to help others
+				  find the perfect fitment for{" "}
+				  <span class="yearMakeModel">
+					{vehicleData?.["year"]} {vehicleData?.["make"]}{" "}
+					{vehicleData?.["model"]}
+				  </span>{" "}
+				  with{" "}
+				  <span class="wheelBrand">
+					{vehicleData?.["wheel-brand"]}
+				  </span>
+				  <span class="wheelModel">
+					{vehicleData?.["wheel-model"]}
+				  </span>{" "}
+				  As a reminder - our gallery is curated by our community so
+				  please be sure to check a couple of builds to make sure the
+				  fitment you want is doable - but if multiple people are doing
+				  it, we'd bet you can too!
+				</p>
+			  </div>
+			</div>
+		  </div>
+		</div>
+	  </div>
+	  </div>
+	</VehicleGalleryLayout>
+
+
+<script type="text/javascript">	
+	$(document).ready(function(){
+		$('.single-item').slick({
+			lazyLoad: true,
+			slidesToShow: 1,
+			slidesToScroll: 1,
+			variableWidth: false,
+			infinite: false,
+			dots: true,				
+		});
+	});
+</script>
