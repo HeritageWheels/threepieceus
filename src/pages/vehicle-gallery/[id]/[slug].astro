@@ -41,9 +41,19 @@ const tires = [vehicleData?.['tire-brand'], vehicleData?.['tire-model']].filter(
 const pageTitle = ([vehicle, wheels].filter(Boolean).join(' with ')
   + (wheelFinish ? ` - ${wheelFinish}` : '')
   + (tires ? ` and ${tires}` : '')).trim() || undefined;
+
+const metaDescription = [
+  vehicle,
+  wheels && `with ${wheels} wheels`,
+  wheelFinish && wheelFinish,
+  tires && `and ${tires} tires`,
+]
+  .filter(Boolean)
+  .join(' ')
+  .trim() + '. View fitment specs, wheel size, offset, and suspension details at Three Piece.';
 ---
 
-<VehicleGalleryLayout pageTitle={pageTitle}>
+<VehicleGalleryLayout pageTitle={pageTitle} metaDescription={metaDescription}>
 	<div id="vehicle-gallery-page">
 	<div class="container">
 		<div>
