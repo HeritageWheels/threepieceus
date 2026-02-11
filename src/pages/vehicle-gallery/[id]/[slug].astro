@@ -494,85 +494,85 @@ const schemaJsonLd = JSON.stringify({
 
 
 <script>
-	(function () {
-		const slider = document.getElementById('vehicle-slider');
-		if (!slider) return;
-		const trackNode = slider.querySelector('.vehicle-slider__track');
-		const slides = slider.querySelectorAll('.vehicle-slider__slide');
-		const prev = slider.querySelector('.vehicle-slider__prev');
-		const next = slider.querySelector('.vehicle-slider__next');
-		const dots = slider.querySelectorAll('.vehicle-slider__dot');
-		const total = slides.length;
-		if (total <= 1 || !trackNode) return;
+	// (function () {
+	// 	const slider = document.getElementById('vehicle-slider');
+	// 	if (!slider) return;
+	// 	const trackNode = slider.querySelector('.vehicle-slider__track');
+	// 	const slides = slider.querySelectorAll('.vehicle-slider__slide');
+	// 	const prev = slider.querySelector('.vehicle-slider__prev');
+	// 	const next = slider.querySelector('.vehicle-slider__next');
+	// 	const dots = slider.querySelectorAll('.vehicle-slider__dot');
+	// 	const total = slides.length;
+	// 	if (total <= 1 || !trackNode) return;
 
-		const track = trackNode instanceof HTMLElement ? trackNode : null;
-		if (!track) return;
+	// 	const track = trackNode instanceof HTMLElement ? trackNode : null;
+	// 	if (!track) return;
 
-		let index = 0;
-		let touchStartX = 0;
-		let touchStartY = 0;
-		let touchStartIndex = 0;
-		let touchIsHorizontal: boolean | null = null;
+	// 	let index = 0;
+	// 	let touchStartX = 0;
+	// 	let touchStartY = 0;
+	// 	let touchStartIndex = 0;
+	// 	let touchIsHorizontal: boolean | null = null;
 
-		function goTo(i: number) {
-			index = Math.max(0, Math.min(i, total - 1));
-			track!.style.transition = '';
-			track!.style.transform = `translate3d(-${index * 100}%, 0, 0)`;
-			dots.forEach((dot, j) => {
-				dot.setAttribute('aria-selected', j === index ? 'true' : 'false');
-				dot.classList.toggle('is-active', j === index);
-			});
-		}
+	// 	function goTo(i: number) {
+	// 		index = Math.max(0, Math.min(i, total - 1));
+	// 		track!.style.transition = '';
+	// 		track!.style.transform = `translate3d(-${index * 100}%, 0, 0)`;
+	// 		dots.forEach((dot, j) => {
+	// 			dot.setAttribute('aria-selected', j === index ? 'true' : 'false');
+	// 			dot.classList.toggle('is-active', j === index);
+	// 		});
+	// 	}
 
-		prev?.addEventListener('click', () => goTo(index - 1));
-		next?.addEventListener('click', () => goTo(index + 1));
-		dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)));
+	// 	prev?.addEventListener('click', () => goTo(index - 1));
+	// 	next?.addEventListener('click', () => goTo(index + 1));
+	// 	dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)));
 
-		track.addEventListener('touchstart', (e: TouchEvent) => {
-			if (e.touches.length !== 1) return;
-			touchStartX = e.touches[0].clientX;
-			touchStartY = e.touches[0].clientY;
-			touchStartIndex = index;
-			touchIsHorizontal = null;
-			track.style.transition = 'none';
-		}, { passive: true });
+	// 	track.addEventListener('touchstart', (e: TouchEvent) => {
+	// 		if (e.touches.length !== 1) return;
+	// 		touchStartX = e.touches[0].clientX;
+	// 		touchStartY = e.touches[0].clientY;
+	// 		touchStartIndex = index;
+	// 		touchIsHorizontal = null;
+	// 		track.style.transition = 'none';
+	// 	}, { passive: true });
 
-		track.addEventListener('touchmove', (e: TouchEvent) => {
-			if (e.touches.length !== 1) return;
-			const x = e.touches[0].clientX;
-			const y = e.touches[0].clientY;
-			const deltaX = x - touchStartX;
-			const deltaY = y - touchStartY;
-			if (touchIsHorizontal === null) {
-				touchIsHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
-			}
-			if (touchIsHorizontal && Math.abs(deltaX) > 5) {
-				e.preventDefault();
-			}
-			const trackWidth = track.offsetWidth;
-			const minOffset = -(total - 1) * trackWidth;
-			const maxOffset = 0;
-			let offsetPx = -touchStartIndex * trackWidth + deltaX;
-			offsetPx = Math.max(minOffset, Math.min(maxOffset, offsetPx));
-			track.style.transform = `translate3d(${offsetPx}px, 0, 0)`;
-		}, { passive: false });
+	// 	track.addEventListener('touchmove', (e: TouchEvent) => {
+	// 		if (e.touches.length !== 1) return;
+	// 		const x = e.touches[0].clientX;
+	// 		const y = e.touches[0].clientY;
+	// 		const deltaX = x - touchStartX;
+	// 		const deltaY = y - touchStartY;
+	// 		if (touchIsHorizontal === null) {
+	// 			touchIsHorizontal = Math.abs(deltaX) > Math.abs(deltaY);
+	// 		}
+	// 		if (touchIsHorizontal && Math.abs(deltaX) > 5) {
+	// 			e.preventDefault();
+	// 		}
+	// 		const trackWidth = track.offsetWidth;
+	// 		const minOffset = -(total - 1) * trackWidth;
+	// 		const maxOffset = 0;
+	// 		let offsetPx = -touchStartIndex * trackWidth + deltaX;
+	// 		offsetPx = Math.max(minOffset, Math.min(maxOffset, offsetPx));
+	// 		track.style.transform = `translate3d(${offsetPx}px, 0, 0)`;
+	// 	}, { passive: false });
 
-		track.addEventListener('touchend', (e: TouchEvent) => {
-			track.style.transition = '';
-			if (e.changedTouches.length !== 1) return;
-			const endX = e.changedTouches[0].clientX;
-			const deltaX = endX - touchStartX;
-			const trackWidth = track.offsetWidth;
-			const threshold = trackWidth * 0.2;
-			if (deltaX > threshold) {
-				goTo(touchStartIndex - 1);
-			} else if (deltaX < -threshold) {
-				goTo(touchStartIndex + 1);
-			} else {
-				goTo(touchStartIndex);
-			}
-		}, { passive: true });
+	// 	track.addEventListener('touchend', (e: TouchEvent) => {
+	// 		track.style.transition = '';
+	// 		if (e.changedTouches.length !== 1) return;
+	// 		const endX = e.changedTouches[0].clientX;
+	// 		const deltaX = endX - touchStartX;
+	// 		const trackWidth = track.offsetWidth;
+	// 		const threshold = trackWidth * 0.2;
+	// 		if (deltaX > threshold) {
+	// 			goTo(touchStartIndex - 1);
+	// 		} else if (deltaX < -threshold) {
+	// 			goTo(touchStartIndex + 1);
+	// 		} else {
+	// 			goTo(touchStartIndex);
+	// 		}
+	// 	}, { passive: true });
 
-		goTo(0);
-	})();
+	// 	goTo(0);
+	// })();
 </script>
