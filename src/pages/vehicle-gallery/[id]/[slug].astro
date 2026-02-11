@@ -70,7 +70,7 @@ const pageTitle = ([vehicle, wheels].filter(Boolean).join(' with ')
 					.filter((number) => vehicleData?.[`image-${number}`])
 					.map((number) => (
 						<div>
-							<img src={vehicleData?.[`image-${number}`]} alt="" />
+							<img src={vehicleData?.[`image-${number}`]} alt={`${vehicle} - Image ${number}`} title={`${vehicle} - Image ${number}`} />
 						</div>
 					))}
 			</div>
