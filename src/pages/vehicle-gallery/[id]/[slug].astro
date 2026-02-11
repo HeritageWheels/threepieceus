@@ -80,7 +80,13 @@ const metaDescription = [
 					.filter((number) => vehicleData?.[`image-${number}`])
 					.map((number) => (
 						<div>
-							<img src={vehicleData?.[`image-${number}`]} alt={`${vehicle} - Image ${number}`} title={`${vehicle} - Image ${number}`} />
+							<img
+								src={vehicleData?.[`image-${number}`]}
+								alt={`${vehicle} - Image ${number}`}
+								title={`${vehicle} - Image ${number}`}
+								loading={number === 1 ? 'eager' : 'lazy'}
+								fetchpriority={number === 1 ? 'high' : undefined}
+							/>
 						</div>
 					))}
 			</div>
