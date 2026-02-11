@@ -47,7 +47,13 @@ const pageTitle = ([vehicle, wheels].filter(Boolean).join(' with ')
 	<div id="vehicle-gallery-page">
 	<div class="container">
 		<div>
-		  <!-- <div class="breadcrumbs">{renderBreadcrumbs()}</div> -->
+		  <nav class="breadcrumbs" aria-label="Breadcrumb">
+		    <a href="https://threepiece.us/">Home</a>
+		    <span class="breadcrumbs-sep" aria-hidden="true">/</span>
+		    <a href="https://threepiece.us/vehicle-gallery">Vehicle Gallery</a>
+		    <span class="breadcrumbs-sep" aria-hidden="true">/</span>
+		    <span class="breadcrumbs-current">{vehicle}</span>
+		  </nav>
 		  <h1 class="vehicle-title">
 			{vehicleData?.year} {vehicleData?.make} {vehicleData?.model}
 		  </h1>
