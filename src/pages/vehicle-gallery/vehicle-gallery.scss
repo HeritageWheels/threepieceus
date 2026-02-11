@@ -215,6 +215,7 @@ $screen-small: 551px;
       align-items: center;
       transition: transform 0.3s ease;
       will-change: transform;
+      touch-action: pan-y;
     }
 
     .vehicle-slider__slide {
