@@ -2,9 +2,10 @@
 interface Props {
   pageTitle?: string;
   metaDescription?: string;
+  schemaJsonLd?: string;
 }
 
-const { pageTitle: titleProp, metaDescription } = Astro.props;
+const { pageTitle: titleProp, metaDescription, schemaJsonLd } = Astro.props;
 import { splitHeaderHtmlForSlot } from '../lib/inject-slot-into-header';
 
 const [headerResponse, footerResponse] = await Promise.all([
@@ -34,6 +35,11 @@ if (headerHtml.includes('<title>')) {
 if (metaDescription) {
   const metaDescTag = `<meta name="description" content="${metaDescription.replace(/"/g, '&quot;')}" />`;
   headerHtml = headerHtml.replace('</head>', metaDescTag + '\n\t</head>');
+}
+
+if (schemaJsonLd) {
+  const scriptTag = `<script type="application/ld+json">${schemaJsonLd}</script>`;
+  headerHtml = headerHtml.replace('</head>', scriptTag + '\n\t</head>');
 }
 
 headerHtml = headerHtml.replace('</head>', slickStyles + '\n\t</head>');

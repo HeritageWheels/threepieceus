@@ -51,9 +51,54 @@ const metaDescription = [
   .filter(Boolean)
   .join(' ')
   .trim() + '. View fitment specs, wheel size, offset, and suspension details at Three Piece.';
+
+const baseUrl = 'https://threepiece.us';
+const pageUrl = `${baseUrl}/vehicle-gallery/${id}/${canonicalSlug}`;
+const imageUrls = [1, 2, 3, 4, 5]
+  .map((n) => vehicleData?.[`image-${n}`])
+  .filter(Boolean);
+const firstImageUrl = imageUrls[0];
+
+const schemaJsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      name: pageTitle ?? vehicle,
+      description: metaDescription,
+      url: pageUrl,
+      ...(firstImageUrl && {
+        primaryImageOfPage: {
+          '@type': 'ImageObject',
+          url: firstImageUrl,
+        },
+      }),
+      breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${pageUrl}#breadcrumb`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${baseUrl}/` },
+        { '@type': 'ListItem', position: 2, name: 'Vehicle Gallery', item: `${baseUrl}/vehicle-gallery` },
+        { '@type': 'ListItem', position: 3, name: vehicle },
+      ],
+    },
+    {
+      '@type': 'Vehicle',
+      name: vehicle,
+      ...(vehicleData?.year && { vehicleModelDate: Number(vehicleData.year) }),
+      ...(vehicleData?.make && { brand: { '@type': 'Brand', name: String(vehicleData.make) } }),
+      ...(vehicleData?.model && { model: String(vehicleData.model) }),
+      ...(imageUrls.length > 0 && {
+        image: imageUrls.map((url) => ({ '@type': 'ImageObject', url })),
+      }),
+    },
+  ],
+});
 ---
 
-<VehicleGalleryLayout pageTitle={pageTitle} metaDescription={metaDescription}>
+<VehicleGalleryLayout pageTitle={pageTitle} metaDescription={metaDescription} schemaJsonLd={schemaJsonLd}>
 	<div id="vehicle-gallery-page">
 	<div class="container">
 		<div>
