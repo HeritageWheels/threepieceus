@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/((?!vehicle-gallery).*)",
+      "destination": "https://threepiece.us/vehicle-gallery",
+      "permanent": false
+    }
+  ]
+}
