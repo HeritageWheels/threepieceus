@@ -322,15 +322,11 @@ $screen-small: 551px;
 }
 
 .navUser-item--cart {
-  display: none;
+  display: none !important;
 }
 
 .header-logo {
   justify-content: space-between;
-}
-
-.quickSearchWrap {
-  display: none;
 }
 
 .navUser-item--mobile-search {
