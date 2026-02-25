@@ -1,0 +1,445 @@
+---
+interface Props {
+  /** Base URL for links (e.g. https://threepiece.us) */
+  baseUrl?: string;
+}
+
+const { baseUrl = 'https://threepiece.us' } = Astro.props;
+---
+
+<header class="site-header">
+  <!-- Desktop: two rows -->
+  <div class="site-header__top site-header__top--desktop">
+    <button type="button" class="site-header__desktop-hamburger" aria-label="Show navigation" id="header-desktop-hamburger">
+      <span class="site-header__hamburger-line"></span>
+      <span class="site-header__hamburger-line"></span>
+      <span class="site-header__hamburger-line"></span>
+    </button>
+    <a href={baseUrl} class="site-header__logo">
+      <span class="site-header__logo-main">threepiece.us</span>
+      <span class="site-header__logo-tagline">車も本物 || 安さも本物.</span>
+    </a>
+    <span class="site-header__top-spacer" aria-hidden="true"></span>
+  </div>
+  <div class="site-header__nav-wrap">
+    <nav class="site-header__nav site-header__nav--desktop" aria-label="Main navigation">
+      <a href={`${baseUrl}/shop`} class="site-header__nav-link">SHOP</a>
+      <a href={`${baseUrl}/brands`} class="site-header__nav-link">BRANDS</a>
+      <a href={`${baseUrl}/heritage-wheel`} class="site-header__nav-link">HERITAGE WHEEL</a>
+      <a href={`${baseUrl}/gallery`} class="site-header__nav-link">THREEPIECEUS GALLERY</a>
+      <a href={`${baseUrl}/add-your-ride`} class="site-header__nav-link">ADD YOUR RIDE</a>
+      <a href={`${baseUrl}/fitment-info`} class="site-header__nav-link">FITMENT INFO</a>
+    </nav>
+  </div>
+
+  <!-- Mobile: single bar with hamburger, logo, icons -->
+  <div class="site-header__mobile">
+    <button type="button" class="site-header__hamburger" aria-label="Open menu" aria-expanded="false" id="header-hamburger">
+      <span class="site-header__hamburger-line"></span>
+      <span class="site-header__hamburger-line"></span>
+      <span class="site-header__hamburger-line"></span>
+    </button>
+    <a href={baseUrl} class="site-header__logo site-header__logo--mobile">
+      <span class="site-header__logo-main">threepiece.us</span>
+      <span class="site-header__logo-tagline">車も本物 || 安さも本物.</span>
+    </a>
+    <div class="site-header__mobile-actions">
+      <a href={`${baseUrl}/vehicle-gallery`} class="site-header__mobile-icon" aria-label="Vehicle gallery">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.9-.9-1.5-1.5-2.5-1.5H5c-1 0-1.6.6-2.5 1.5C1.3 8.6 0 10 0 10s-2.7.6-3.5 1.1C.7 11.3 0 12.1 0 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+        <span class="site-header__garage-count">(0)</span>
+      </a>
+      <button type="button" class="site-header__mobile-icon site-header__search-btn" aria-label="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile nav overlay -->
+  <div class="site-header__overlay" id="header-overlay" aria-hidden="true">
+    <div class="site-header__panel" id="header-panel">
+      <button type="button" class="site-header__close" aria-label="Close menu" id="header-close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <nav class="site-header__panel-nav" aria-label="Mobile navigation">
+        <a href={`${baseUrl}/login`} class="site-header__panel-item site-header__panel-item--auth">
+          <span class="site-header__panel-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </span>
+          SIGN IN or REGISTER
+        </a>
+        <a href={`${baseUrl}/shop`} class="site-header__panel-item">
+          SHOP
+          <span class="site-header__panel-chevron">&#x203A;</span>
+        </a>
+        <a href={`${baseUrl}/brands`} class="site-header__panel-item">
+          BRANDS
+          <span class="site-header__panel-chevron">&#x203A;</span>
+        </a>
+        <a href={`${baseUrl}/heritage-wheel`} class="site-header__panel-item">HERITAGE WHEEL</a>
+        <a href={`${baseUrl}/gallery`} class="site-header__panel-item">THREEPIECEUS GALLERY</a>
+        <a href={`${baseUrl}/add-your-ride`} class="site-header__panel-item">ADD YOUR RIDE</a>
+        <a href={`${baseUrl}/fitment-info`} class="site-header__panel-item">FITMENT INFO</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<style is:global>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    width: 100%;
+  }
+
+  /* Desktop */
+  .site-header__top--desktop {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    padding: 1rem 1.5rem;
+    background-color: #000000;
+  }
+
+  .site-header__desktop-hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #888;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  .site-header__desktop-hamburger .site-header__hamburger-line {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background-color: currentColor;
+  }
+
+  .site-header__top-spacer {
+    display: none;
+    width: 44px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  /* Desktop nav wrapper for smooth collapse */
+  .site-header__nav-wrap {
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+  }
+
+  @media (max-width: 900px) {
+    .site-header__nav-wrap {
+      display: none;
+    }
+  }
+
+  /* Desktop: when scrolled, collapse nav and show hamburger in top bar */
+  @media (min-width: 901px) {
+    .site-header__top--desktop {
+      /* display: grid; */
+      /* grid-template-columns: 1fr auto; */
+    }
+    .site-header__top--desktop .site-header__logo {
+      grid-column: 2;
+    }
+    .site-header__desktop-hamburger {
+      display: none;
+      justify-self: start;
+    }
+    .site-header__top-spacer {
+      display: block;
+      justify-self: end;
+    }
+    .site-header__nav-wrap {
+      max-height: 100px;
+    }
+    .site-header.is-scrolled .site-header__nav-wrap {
+      max-height: 0;
+    }
+    .site-header.is-scrolled .site-header__desktop-hamburger {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .site-header.is-scrolled .site-header__top-spacer {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  .site-header__logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #ffffff;
+  }
+
+  .site-header__logo-main {
+    font-weight: bold;
+    font-size: 1.25rem;
+  }
+
+  .site-header__logo-tagline {
+    font-size: 0.75rem;
+    font-weight: normal;
+    margin-top: 0.15rem;
+  }
+
+  .site-header__nav--desktop {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    background-color: #2d2d2d;
+    flex-wrap: wrap;
+  }
+
+  .site-header__nav-link {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.8125rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .site-header__nav-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Mobile bar - hidden by default */
+  .site-header__mobile {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: #000000;
+    border-top: 1px solid #3d3d3d;
+  }
+
+  .site-header__hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #888;
+    cursor: pointer;
+  }
+
+  .site-header__hamburger-line {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background-color: currentColor;
+  }
+
+  .site-header__logo--mobile {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .site-header__mobile-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .site-header__mobile-icon {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0.5rem;
+    color: #ffffff;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.875rem;
+  }
+
+  .site-header__garage-count {
+    font-size: 0.75rem;
+  }
+
+  /* Overlay & panel */
+  .site-header__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1001;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0.25s, opacity 0.25s;
+  }
+
+  .site-header__overlay.is-open {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .site-header__panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 85vw);
+    background-color: #1a1a1a;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+  }
+
+  .site-header__overlay.is-open .site-header__panel {
+    transform: translateX(0);
+  }
+
+  .site-header__close {
+    position: absolute;
+    top: 1rem;
+    right: -3rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #333;
+    border-radius: 50%;
+    background: #fff;
+    color: #000;
+    cursor: pointer;
+  }
+
+  .site-header__panel-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 3rem 0 1.5rem;
+  }
+
+  .site-header__panel-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    color: #e5e5e5;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid #333;
+  }
+
+  .site-header__panel-item--auth .site-header__panel-icon {
+    color: #9ca3af;
+  }
+
+  .site-header__panel-chevron {
+    margin-left: auto;
+    transform: rotate(-90deg);
+    font-size: 1rem;
+    color: #888;
+  }
+
+  /* Responsive: show mobile below 900px */
+  @media (max-width: 900px) {
+    .site-header__top--desktop,
+    .site-header__nav--desktop {
+      display: none;
+    }
+    .site-header__mobile {
+      display: flex;
+    }
+  }
+
+  @media (min-width: 901px) {
+    .site-header__overlay {
+      display: none;
+    }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var header = document.querySelector('.site-header');
+    var hamburger = document.getElementById('header-hamburger');
+    var desktopHamburger = document.getElementById('header-desktop-hamburger');
+    var overlay = document.getElementById('header-overlay');
+    var closeBtn = document.getElementById('header-close');
+    var thresholdHide = 80;
+    var thresholdShow = 35;
+    var navManuallyOpened = false;
+    var lastManualOpenTime = 0;
+    var openDebounceMs = 400;
+
+    function isDesktop() {
+      return window.matchMedia('(min-width: 901px)').matches;
+    }
+
+    function updateScrolled() {
+      if (!header || !isDesktop()) return;
+      var y = window.scrollY;
+      if (y <= thresholdShow) {
+        navManuallyOpened = false;
+        header.classList.remove('is-scrolled');
+        return;
+      }
+      if (y < thresholdHide) return;
+      if (navManuallyOpened && (Date.now() - lastManualOpenTime < openDebounceMs)) return;
+      navManuallyOpened = false;
+      header.classList.add('is-scrolled');
+    }
+
+    if (header && desktopHamburger) {
+      window.addEventListener('scroll', updateScrolled, { passive: true });
+      updateScrolled();
+      desktopHamburger.addEventListener('click', function () {
+        navManuallyOpened = true;
+        lastManualOpenTime = Date.now();
+        header.classList.remove('is-scrolled');
+      });
+    }
+
+    if (!hamburger || !overlay || !closeBtn) return;
+
+    function openMenu() {
+      overlay.classList.add('is-open');
+      hamburger.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMenu() {
+      overlay.classList.remove('is-open');
+      hamburger.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    }
+
+    hamburger.addEventListener('click', openMenu);
+    closeBtn.addEventListener('click', closeMenu);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeMenu();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeMenu();
+    });
+  })();
+</script>

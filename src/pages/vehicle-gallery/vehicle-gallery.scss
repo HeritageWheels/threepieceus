@@ -3,11 +3,16 @@ $screen-tabletLarge: 900px;
 $screen-medium: 801px;
 $screen-small: 551px;
 
+body {
+  margin: 0;
+}
+
 .container {
   max-width: 1230px;
   padding: 0 15px;
   width: 100%;
   min-width: 0;
+  margin-top: 2rem;
 }
 
 @media (min-width: 1261px) {

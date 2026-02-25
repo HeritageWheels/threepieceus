@@ -1,0 +1,47 @@
+---
+interface Props {
+  baseUrl?: string;
+}
+
+const { baseUrl = 'https://threepiece.us' } = Astro.props;
+---
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <a href={baseUrl} class="site-footer__logo">threepiece.us</a>
+    <p class="site-footer__copy">© {new Date().getFullYear()} Three Piece. All rights reserved.</p>
+  </div>
+</footer>
+
+<style is:global>
+  .site-footer {
+    margin-top: auto;
+    padding: 2rem 1.5rem;
+    background-color: #1c1d21;
+    color: #9ca3af;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 0.875rem;
+  }
+
+  .site-footer__inner {
+    max-width: 1230px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .site-footer__logo {
+    display: inline-block;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .site-footer__logo:hover {
+    text-decoration: underline;
+  }
+
+  .site-footer__copy {
+    margin: 0;
+  }
+</style>
