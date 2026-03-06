@@ -4,21 +4,140 @@ interface Props {
 }
 
 const { baseUrl = 'https://threepiece.us' } = Astro.props;
+
+const currentYear = new Date().getFullYear();
+
+/** Same top-level nav as Header – footer categories column matches header. */
+const TOP_LEVEL_NAV: { name: string; path: string }[] = [
+  { name: 'Shop', path: '/shop' },
+  { name: 'Brands', path: '/brands' },
+  { name: 'Heritage Wheel', path: '/heritage-wheel' },
+  { name: 'Threepieceus Gallery', path: '/vehicle-gallery' },
+  { name: 'Add Your Ride', path: '/add-vehicle' },
+  { name: 'Fitment Info', path: '/blog' },
+];
+
+const categories: { name: string; href: string }[] = TOP_LEVEL_NAV.map((item) => ({
+  name: item.name,
+  href: `${baseUrl}${item.path.replace(/^\/?/, '/')}`,
+}));
+
+const information = [
+  { name: 'Threepieceus Gallery', path: '/vehiclegallery' },
+  { name: 'Add Your Ride', path: '/add-vehicle' },
+  { name: 'Fitment Info', path: '/blog' },
+  { name: 'Contact Us', path: '/contact-us' },
+  { name: 'Privacy Policy', path: '/privacy-policy' },
+  { name: 'Shipping & Return', path: '/shipping-return' },
+  { name: 'Terms & Conditions', path: '/terms-and-conditions/' },
+  { name: 'Sitemap', path: '/sitemap' },
+];
+
+const brands = [
+  { name: 'Work Wheels', path: '/new-wheels/work-wheels' },
+  { name: 'CCW Wheels', path: '/ccw-wheels' },
+  { name: 'SSR Wheels', path: '/new-wheels/ssr-wheels/' },
+  { name: 'Fuel Forged', path: '/fuel-forged' },
+  { name: 'Fuel 1PC', path: '/fuel-1pc' },
+  { name: 'Black Rhino', path: '/black-rhino' },
+  { name: 'ESR Wheels', path: '/esr-wheels' },
+  { name: 'EBC', path: '/brands/EBC.html' },
+  { name: 'TSW', path: '/tsw' },
+  { name: 'XD', path: '/xd' },
+  { name: 'View All', path: '/brands' },
+];
+
+const socialLinks = [
+  { name: 'YouTube', href: 'https://www.youtube.com/@threepieceus', icon: 'youtube' },
+  { name: 'Instagram', href: 'https://www.instagram.com/threepiece.us/', icon: 'instagram' },
+  { name: 'Facebook', href: 'https://www.facebook.com/threepieceus', icon: 'facebook' },
+];
 ---
 
 <footer class="site-footer">
   <div class="site-footer__inner">
-    <a href={baseUrl} class="site-footer__logo">threepiece.us</a>
-    <p class="site-footer__copy">© {new Date().getFullYear()} Three Piece. All rights reserved.</p>
+    <div class="site-footer__top">
+      <div class="site-footer__col site-footer__col--brand">
+        <h2 class="site-footer__brand-name">Threepieceus</h2>
+        <span class="site-footer__brand-line" aria-hidden="true"></span>
+        <a href={`mailto:sales@threepiece.us`} class="site-footer__email">
+          <svg class="site-footer__email-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          sales@threepiece.us
+        </a>
+      </div>
+
+      <div class="site-footer__col">
+        <h3 class="site-footer__heading">CATEGORIES</h3>
+        <ul class="site-footer__links">
+          {categories.map((item) => (
+            <li><a href={item.href}>{item.name}</a></li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="site-footer__col">
+        <h3 class="site-footer__heading">INFORMATION</h3>
+        <ul class="site-footer__links">
+          {information.map((item) => (
+            <li><a href={`${baseUrl}${item.path}`}>{item.name}</a></li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="site-footer__col">
+        <h3 class="site-footer__heading">BRANDS</h3>
+        <ul class="site-footer__links">
+          {brands.map((item) => (
+            <li><a href={`${baseUrl}${item.path}`}>{item.name}</a></li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="site-footer__col site-footer__col--social">
+        <h3 class="site-footer__heading">FOLLOW US</h3>
+        <div class="site-footer__social">
+          {socialLinks.map((item) => (
+            <a href={item.href} class="site-footer__social-link" target="_blank" rel="noopener noreferrer" aria-label={item.name}>
+              {item.icon === 'youtube' && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              )}
+              {item.icon === 'instagram' && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+              )}
+              {item.icon === 'facebook' && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              )}
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="site-footer__divider" aria-hidden="true"></div>
+
+    <div class="site-footer__bottom">
+      <div class="site-footer__payments" aria-label="Accepted payment methods">
+        <span class="site-footer__payment">AMERICAN EXPRESS</span>
+        <span class="site-footer__payment">DISCOVER</span>
+        <span class="site-footer__payment">PayPal</span>
+        <span class="site-footer__payment">VISA</span>
+        <span class="site-footer__payment">Klarna</span>
+        <span class="site-footer__payment">Mastercard</span>
+      </div>
+      <p class="site-footer__copy">© {currentYear} Threepieceus</p>
+    </div>
   </div>
 </footer>
 
 <style is:global>
   .site-footer {
-    margin-top: auto;
-    padding: 2rem 1.5rem;
-    background-color: #1c1d21;
-    color: #9ca3af;
+    margin-top: 5rem;
+    padding: 3.5rem 1.5rem 2rem;
+    background-color: #000000;
+    color: #e5e5e5;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 0.875rem;
   }
@@ -26,22 +145,161 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
   .site-footer__inner {
     max-width: 1230px;
     margin: 0 auto;
-    text-align: center;
   }
 
-  .site-footer__logo {
-    display: inline-block;
-    color: #ffffff;
+  .site-footer__top {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    gap: 2.5rem 1.5rem;
+  }
+
+  .site-footer__col--brand {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .site-footer__brand-name {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #c9a227;
+    letter-spacing: 0.02em;
+  }
+
+  .site-footer__brand-line {
+    display: block;
+    width: 2rem;
+    height: 1px;
+    background-color: #555;
+  }
+
+  .site-footer__email {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #c9a227;
     text-decoration: none;
-    font-weight: bold;
+    font-size: 0.875rem;
+    font-weight: 400;
+  }
+
+  .site-footer__email:hover {
+    text-decoration: underline;
+    color: #d4af37;
+  }
+
+  .site-footer__email-icon {
+    flex-shrink: 0;
+    color: #c9a227;
+  }
+
+  .site-footer__heading {
+    margin: 0 0 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #c9a227;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .site-footer__links {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-footer__links li {
     margin-bottom: 0.5rem;
   }
 
-  .site-footer__logo:hover {
+  .site-footer__links a {
+    color: #e5e5e5;
+    text-decoration: none;
+    font-size: 0.8125rem;
+    font-weight: 400;
+  }
+
+  .site-footer__links a:hover {
     text-decoration: underline;
+  }
+
+  .site-footer__social {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .site-footer__social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    transition: opacity 0.2s ease;
+  }
+
+  .site-footer__social-link:hover {
+    opacity: 0.85;
+  }
+
+  .site-footer__social-link svg {
+    display: block;
+  }
+
+  .site-footer__divider {
+    margin: 2.5rem 0 1.5rem;
+    height: 1px;
+    background-color: #444;
+  }
+
+  .site-footer__bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .site-footer__payments {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .site-footer__payment {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: #d4d4d4;
+    letter-spacing: 0.03em;
   }
 
   .site-footer__copy {
     margin: 0;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #d4d4d4;
+  }
+
+  @media (max-width: 900px) {
+    .site-footer__top {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .site-footer__col--brand {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 551px) {
+    .site-footer__top {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .site-footer__bottom {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
 </style>

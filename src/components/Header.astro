@@ -5,30 +5,164 @@ interface Props {
 }
 
 const { baseUrl = 'https://threepiece.us' } = Astro.props;
+const logoUrl = 'https://cdn11.bigcommerce.com/s-8zxb6tk/images/stencil/200x90/threepiece-logo_1713917723__25054.original.png';
+
+/** Top-level nav: name (for display + API match) and path (used when category doesn't exist in API). */
+const TOP_LEVEL_NAV: { name: string; path: string }[] = [
+  { name: 'Shop', path: '/shop' },
+  { name: 'Brands', path: '/brands' },
+  { name: 'Heritage Wheel', path: '/heritage-wheel' },
+  { name: 'Threepieceus Gallery', path: '/gallery' },
+  { name: 'Add Your Ride', path: '/add-your-ride' },
+  { name: 'Fitment Info', path: '/fitment-info' },
+];
+
+interface CategoryNode {
+  category_id?: number;
+  name?: string;
+  url?: { path?: string };
+}
+
+interface NavChild {
+  name: string;
+  href: string;
+  category_id?: number;
+  children: { name: string; href: string }[];
+}
+
+interface NavItem {
+  name: string;
+  href: string;
+  children: NavChild[];
+}
+
+function toHref(path: string | undefined): string {
+  if (!path) return baseUrl;
+  return path.startsWith('http') ? path : `${baseUrl}${path.replace(/^\/?/, '/')}`;
+}
+
+function parseCategoryList(json: unknown): CategoryNode[] {
+  const data = (json as { data?: unknown })?.data ?? json;
+  if (Array.isArray(data)) return data as CategoryNode[];
+  const cats = (data as { categories?: CategoryNode[] })?.categories;
+  return Array.isArray(cats) ? cats : [];
+}
+
+function sameName(a: string, b: string): boolean {
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
+}
+
+const apiBase = new URL('/api/categories', Astro.url.origin).href;
+
+let navItems: NavItem[] = [];
+try {
+  const parentsRes = await fetch(apiBase);
+  if (!parentsRes.ok) throw new Error();
+  const parentsList = parseCategoryList(await parentsRes.json());
+  const apiParents = parentsList.filter((n) => n.name);
+
+  for (const item of TOP_LEVEL_NAV) {
+    const parent = apiParents.find((p) => sameName(p.name!, item.name));
+
+    if (parent) {
+      const id = parent.category_id;
+      const children: NavChild[] = [];
+      if (id != null) {
+        try {
+          const childRes = await fetch(`${apiBase}?parent_id:in=${id}`);
+          if (childRes.ok) {
+            const childList = parseCategoryList(await childRes.json());
+            for (const node of childList.filter((n) => n.name)) {
+              const childId = node.category_id;
+              const subChildren: { name: string; href: string }[] = [];
+              if (childId != null) {
+                try {
+                  const subRes = await fetch(`${apiBase}?parent_id:in=${childId}`);
+                  if (subRes.ok) {
+                    const subList = parseCategoryList(await subRes.json());
+                    subList.filter((n) => n.name).forEach((sub) => {
+                      subChildren.push({ name: sub.name!, href: toHref(sub.url?.path) });
+                    });
+                  }
+                } catch (_) {}
+              }
+              children.push({
+                name: node.name!,
+                href: toHref(node.url?.path),
+                category_id: childId,
+                children: subChildren,
+              });
+            }
+          }
+        } catch (_) {}
+      }
+      navItems.push({
+        name: item.name,
+        href: toHref(parent.url?.path),
+        children,
+      });
+    } else {
+      navItems.push({
+        name: item.name,
+        href: `${baseUrl}${item.path.replace(/^\/?/, '/')}`,
+        children: [],
+      });
+    }
+  }
+} catch (_) {
+  navItems = TOP_LEVEL_NAV.map((item) => ({
+    name: item.name,
+    href: `${baseUrl}${item.path.replace(/^\/?/, '/')}`,
+    children: [] as NavChild[],
+  }));
+}
 ---
 
 <header class="site-header">
   <!-- Desktop: two rows -->
   <div class="site-header__top site-header__top--desktop">
-    <button type="button" class="site-header__desktop-hamburger" aria-label="Show navigation" id="header-desktop-hamburger">
-      <span class="site-header__hamburger-line"></span>
-      <span class="site-header__hamburger-line"></span>
-      <span class="site-header__hamburger-line"></span>
-    </button>
-    <a href={baseUrl} class="site-header__logo">
-      <span class="site-header__logo-main">threepiece.us</span>
-      <span class="site-header__logo-tagline">車も本物 || 安さも本物.</span>
-    </a>
-    <span class="site-header__top-spacer" aria-hidden="true"></span>
+    <div class="site-header__inner">
+      <button type="button" class="site-header__desktop-hamburger" aria-label="Show navigation" id="header-desktop-hamburger">
+        <span class="site-header__hamburger-line"></span>
+        <span class="site-header__hamburger-line"></span>
+        <span class="site-header__hamburger-line"></span>
+      </button>
+      <a href={baseUrl} class="site-header__logo">
+        <img src={logoUrl} alt="threepiece.us" class="site-header__logo-img" width="200" height="90" />
+      </a>
+      <span class="site-header__top-spacer" aria-hidden="true"></span>
+    </div>
   </div>
   <div class="site-header__nav-wrap">
+    <div class="site-header__inner">
     <nav class="site-header__nav site-header__nav--desktop" aria-label="Main navigation">
-      <a href={`${baseUrl}/shop`} class="site-header__nav-link">SHOP</a>
-      <a href={`${baseUrl}/brands`} class="site-header__nav-link">BRANDS</a>
-      <a href={`${baseUrl}/heritage-wheel`} class="site-header__nav-link">HERITAGE WHEEL</a>
-      <a href={`${baseUrl}/gallery`} class="site-header__nav-link">THREEPIECEUS GALLERY</a>
-      <a href={`${baseUrl}/add-your-ride`} class="site-header__nav-link">ADD YOUR RIDE</a>
-      <a href={`${baseUrl}/fitment-info`} class="site-header__nav-link">FITMENT INFO</a>
+      {navItems.map((item) => (
+        <div class="site-header__nav-item">
+          <a href={item.href} class="site-header__nav-link">{item.name}</a>
+          {item.children.length > 0 && (
+            <div class="site-header__mega" aria-hidden="true">
+              <div class="site-header__mega-inner">
+                <p class="site-header__mega-title">{item.name}</p>
+                <a href={item.href} class="site-header__mega-view-all">View all {item.name}</a>
+                <ul class="site-header__mega-list" aria-label={`Categories under ${item.name}`}>
+                  {item.children.map((child) => (
+                    <li class={`site-header__mega-list-item${child.children.length > 0 ? ' site-header__mega-list-item--has-sub' : ''}`}>
+                      <a href={child.href} class="site-header__mega-link">{child.name}</a>
+                      {child.children.length > 0 && (
+                        <ul class="site-header__mega-sublist">
+                          {child.children.map((sub) => (
+                            <li><a href={sub.href} class="site-header__mega-sublink">{sub.name}</a></li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
     </nav>
   </div>
 
@@ -40,18 +174,8 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
       <span class="site-header__hamburger-line"></span>
     </button>
     <a href={baseUrl} class="site-header__logo site-header__logo--mobile">
-      <span class="site-header__logo-main">threepiece.us</span>
-      <span class="site-header__logo-tagline">車も本物 || 安さも本物.</span>
+      <img src={logoUrl} alt="threepiece.us" class="site-header__logo-img" width="200" height="90" />
     </a>
-    <div class="site-header__mobile-actions">
-      <a href={`${baseUrl}/vehicle-gallery`} class="site-header__mobile-icon" aria-label="Vehicle gallery">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.9-.9-1.5-1.5-2.5-1.5H5c-1 0-1.6.6-2.5 1.5C1.3 8.6 0 10 0 10s-2.7.6-3.5 1.1C.7 11.3 0 12.1 0 13v3c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
-        <span class="site-header__garage-count">(0)</span>
-      </a>
-      <button type="button" class="site-header__mobile-icon site-header__search-btn" aria-label="Search">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      </button>
-    </div>
   </div>
 
   <!-- Mobile nav overlay -->
@@ -61,24 +185,71 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
       <nav class="site-header__panel-nav" aria-label="Mobile navigation">
-        <a href={`${baseUrl}/login`} class="site-header__panel-item site-header__panel-item--auth">
+        <div class="site-header__panel-item site-header__panel-item--auth">
           <span class="site-header__panel-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </span>
-          SIGN IN or REGISTER
-        </a>
-        <a href={`${baseUrl}/shop`} class="site-header__panel-item">
-          SHOP
-          <span class="site-header__panel-chevron">&#x203A;</span>
-        </a>
-        <a href={`${baseUrl}/brands`} class="site-header__panel-item">
-          BRANDS
-          <span class="site-header__panel-chevron">&#x203A;</span>
-        </a>
-        <a href={`${baseUrl}/heritage-wheel`} class="site-header__panel-item">HERITAGE WHEEL</a>
-        <a href={`${baseUrl}/gallery`} class="site-header__panel-item">THREEPIECEUS GALLERY</a>
-        <a href={`${baseUrl}/add-your-ride`} class="site-header__panel-item">ADD YOUR RIDE</a>
-        <a href={`${baseUrl}/fitment-info`} class="site-header__panel-item">FITMENT INFO</a>
+          <a href={`${baseUrl}/login.php`}>SIGN IN</a><span class="site-header__auth-sep"> or </span><a href={`${baseUrl}/login.php?action=create_account`}>REGISTER</a>
+        </div>
+        {navItems.map((item) => {
+          const hasSubmenus = item.children.some((c) => c.children.length > 0);
+          const useCollapsible = item.children.length > 0 && hasSubmenus;
+          return (
+          <div class="site-header__panel-group">
+            {item.children.length > 0 ? (
+              useCollapsible ? (
+                <>
+                  <button type="button" class="site-header__panel-toggle" aria-expanded="false" data-panel-toggle>
+                    <span>{item.name}</span>
+                    <span class="site-header__panel-chevron site-header__panel-chevron--toggle" aria-hidden="true">&#x203A;</span>
+                  </button>
+                  <div class="site-header__panel-children" hidden>
+                    <a href={item.href} class="site-header__panel-item site-header__panel-item--view-all">View all {item.name}</a>
+                    {item.children.map((child) => (
+                      <div class="site-header__panel-child-block">
+                        {child.children.length > 0 ? (
+                          <>
+                            <button type="button" class="site-header__panel-item site-header__panel-item--child site-header__panel-sub-toggle" aria-expanded="false" data-panel-sub-toggle>
+                              {child.name}
+                              <span class="site-header__panel-chevron site-header__panel-chevron--sub" aria-hidden="true">&#x203A;</span>
+                            </button>
+                            <div class="site-header__panel-subchildren" hidden>
+                              <a href={child.href} class="site-header__panel-item site-header__panel-item--view-all">View all {child.name}</a>
+                              {child.children.map((sub) => (
+                                <a href={sub.href} class="site-header__panel-item site-header__panel-item--subchild">{sub.name}</a>
+                              ))}
+                            </div>
+                          </>
+                        ) : (
+                          <a href={child.href} class="site-header__panel-item site-header__panel-item--child">{child.name}</a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <a href={item.href} class="site-header__panel-item site-header__panel-item--parent">
+                    {item.name}
+                    <span class="site-header__panel-chevron">&#x203A;</span>
+                  </a>
+                  <div class="site-header__panel-children">
+                    {item.children.map((child) => (
+                      <div class="site-header__panel-child-block">
+                        <a href={child.href} class="site-header__panel-item site-header__panel-item--child">{child.name}</a>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )
+            ) : (
+              <a href={item.href} class="site-header__panel-item site-header__panel-item--parent">
+                {item.name}
+              </a>
+            )}
+          </div>
+          );
+        })}
       </nav>
     </div>
   </div>
@@ -93,6 +264,13 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
     width: 100%;
   }
 
+  .site-header__inner {
+    max-width: 1230px;
+    margin: 0 auto;
+    padding: 0 15px 0 0;
+    width: 100%;
+  }
+
   /* Desktop */
   .site-header__top--desktop {
     display: flex;
@@ -100,6 +278,12 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
     justify-content: start;
     padding: 1rem 1.5rem;
     background-color: #000000;
+  }
+
+  .site-header__top--desktop .site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
   }
 
   .site-header__desktop-hamburger {
@@ -112,7 +296,7 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
     padding: 0;
     border: none;
     background: none;
-    color: #888;
+    color: #424242;
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -136,32 +320,52 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
 
   /* Desktop nav wrapper for smooth collapse */
   .site-header__nav-wrap {
-    overflow: hidden;
+    overflow: visible;
     transition: max-height 0.35s ease;
+    background-color: #1C1D21;
   }
-
-  @media (max-width: 900px) {
-    .site-header__nav-wrap {
-      display: none;
-    }
+  .site-header.is-scrolled .site-header__nav-wrap {
+    overflow: hidden;
   }
 
   /* Desktop: when scrolled, collapse nav and show hamburger in top bar */
   @media (min-width: 901px) {
-    .site-header__top--desktop {
-      /* display: grid; */
-      /* grid-template-columns: 1fr auto; */
-    }
-    .site-header__top--desktop .site-header__logo {
-      grid-column: 2;
+    .site-header__top--desktop .site-header__inner .site-header__logo {
+      align-self: center;
     }
     .site-header__desktop-hamburger {
-      display: none;
-      justify-self: start;
+      display: flex;
+      width: 44px;
     }
     .site-header__top-spacer {
       display: block;
+      width: 44px;
+    }
+    .site-header.is-scrolled .site-header__top--desktop .site-header__inner {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      justify-items: center;
+    }
+    .site-header.is-scrolled .site-header__top--desktop .site-header__inner .site-header__logo {
+      grid-column: 2;
+    }
+    .site-header.is-scrolled .site-header__desktop-hamburger {
+      justify-self: start;
+    }
+    .site-header.is-scrolled .site-header__top-spacer {
       justify-self: end;
+    }
+    .site-header:not(.is-scrolled) .site-header__desktop-hamburger {
+      width: 0;
+      min-width: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    .site-header:not(.is-scrolled) .site-header__top-spacer {
+      width: 0;
+      min-width: 0;
+      overflow: hidden;
     }
     .site-header__nav-wrap {
       max-height: 100px;
@@ -183,30 +387,38 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
   .site-header__logo {
     display: flex;
     flex-direction: column;
-    align-items: center;
     text-decoration: none;
     color: #ffffff;
   }
 
-  .site-header__logo-main {
-    font-weight: bold;
-    font-size: 1.25rem;
+  .site-header__logo-img {
+    display: block;
+    height: auto;
+    max-height: 45px;
+    width: auto;
+    object-fit: contain;
   }
 
-  .site-header__logo-tagline {
-    font-size: 0.75rem;
-    font-weight: normal;
-    margin-top: 0.15rem;
+  @media (min-width: 901px) {
+    .site-header__top--desktop .site-header__logo-img {
+      height: 45px;
+      width: 100px;      
+    }
   }
+
 
   .site-header__nav--desktop {
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 1.5rem;
-    padding: 0.75rem 1.5rem;
-    background-color: #2d2d2d;
+    padding: 1rem 1.5rem 1rem 0;
     flex-wrap: wrap;
+    position: relative;
+  }
+
+  .site-header__nav-item {
+    position: relative;
   }
 
   .site-header__nav-link {
@@ -216,10 +428,139 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.02em;
+    display: inline-block;
+    padding: 0.25rem 0;
   }
 
   .site-header__nav-link:hover {
     text-decoration: underline;
+  }
+
+  /* Mega menu - opens on hover of nav item */
+  .site-header__mega {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    min-width: 220px;
+    padding-top: 0.5rem;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+    z-index: 100;
+  }
+
+  .site-header__nav-item:hover .site-header__mega,
+  .site-header__nav-item:focus-within .site-header__mega {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .site-header__mega-inner {
+    background: #1a1a1a;
+    border-radius: 4px;
+    padding: 1rem 0;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    border: 1px solid #333;
+    overflow: visible;
+  }
+
+  .site-header__mega-title {
+    margin: 0 0 0.5rem;
+    padding: 0 1.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #fff;
+    border-bottom: 1px solid #333;
+  }
+
+  .site-header__mega-view-all {
+    display: block;
+    padding: 0.5rem 1.25rem;
+    color: #999;
+    text-decoration: none;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.5rem;
+  }
+
+  .site-header__mega-view-all:hover {
+    color: #fff;
+  }
+
+  .site-header__mega-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .site-header__mega-list-item {
+    position: relative;
+    margin: 0;
+  }
+
+  .site-header__mega-link {
+    display: block;
+    padding: 0.5rem 1.25rem;
+    color: #e5e5e5;
+    text-decoration: none;
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .site-header__mega-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  /* Sub-menu - opens on hover of list item that has children */
+  .site-header__mega-sublist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    min-width: 200px;
+    max-height: min(70vh, 400px);
+    overflow-y: auto;
+    margin-left: 2px;
+    background: #1a1a1a;
+    border-radius: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    border: 1px solid #333;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-4px);
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+    z-index: 101;
+  }
+
+  .site-header__mega-list-item:hover .site-header__mega-sublist,
+  .site-header__mega-list-item:focus-within .site-header__mega-sublist {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+  }
+
+  .site-header__mega-sublink {
+    display: block;
+    padding: 0.5rem 1.25rem;
+    color: #e5e5e5;
+    text-decoration: none;
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .site-header__mega-sublink:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.06);
   }
 
   /* Mobile bar - hidden by default */
@@ -227,7 +568,7 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
     display: none;
     align-items: center;
     justify-content: space-between;
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
     background-color: #000000;
     border-top: 1px solid #3d3d3d;
   }
@@ -242,7 +583,7 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
     padding: 0;
     border: none;
     background: none;
-    color: #888;
+    color: #424242;
     cursor: pointer;
   }
 
@@ -257,29 +598,11 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-  }
-
-  .site-header__mobile-actions {
-    display: flex;
     align-items: center;
-    gap: 0.5rem;
   }
 
-  .site-header__mobile-icon {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    padding: 0.5rem;
-    color: #ffffff;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
-    font-size: 0.875rem;
-  }
-
-  .site-header__garage-count {
-    font-size: 0.75rem;
+  .site-header__logo--mobile .site-header__logo-img {
+    max-height: 18px;
   }
 
   /* Overlay & panel */
@@ -302,8 +625,8 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
     top: 0;
     left: 0;
     bottom: 0;
-    width: min(320px, 85vw);
-    background-color: #1a1a1a;
+    width: 80%;
+    background-color: #1C1D21;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
     overflow-y: auto;
@@ -333,18 +656,18 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
   .site-header__panel-nav {
     display: flex;
     flex-direction: column;
-    padding: 3rem 0 1.5rem;
+    padding: 2rem 0 1.5rem;
   }
 
   .site-header__panel-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     padding: 1rem 1.5rem;
     color: #e5e5e5;
     text-decoration: none;
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.02em;
     border-bottom: 1px solid #333;
@@ -354,14 +677,152 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
     color: #9ca3af;
   }
 
+  .site-header__panel-item--auth a {
+    color: #e5e5e5;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .site-header__auth-sep {
+    font-size: 0.75rem;
+    font-weight: normal;
+  }
+
   .site-header__panel-chevron {
     margin-left: auto;
     transform: rotate(-90deg);
-    font-size: 1rem;
+    font-size: 1.25rem;
     color: #888;
   }
 
-  /* Responsive: show mobile below 900px */
+  .site-header__panel-group {
+    border-bottom: 1px solid #333;
+  }
+
+  .site-header__panel-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border: none;
+    background: none;
+    color: #e5e5e5;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .site-header__panel-chevron--toggle {
+    transition: transform 0.2s ease;
+  }
+
+  .site-header__panel-group.is-expanded .site-header__panel-chevron--toggle {
+    transform: rotate(90deg);
+  }
+
+  .site-header__panel-children {
+    padding-bottom: 0.5rem;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+  }
+
+  .site-header__panel-children[hidden] {
+    display: block;
+    max-height: 0;
+    padding-bottom: 0;
+    visibility: hidden;
+  }
+
+  .site-header__panel-group.is-expanded .site-header__panel-children {
+    visibility: visible;
+  }
+
+  .site-header__panel-item--view-all {
+    display: block;
+    padding: 1rem 1.5rem 1rem 2.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #e5e5e5;
+  }
+
+  .site-header__panel-item--parent {
+    font-weight: 600;
+  }
+
+  .site-header__panel-child-block {
+    border-bottom: none;
+  }
+
+  .site-header__panel-item--child {
+    padding: 1rem 1.5rem 1rem 2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #e5e5e5;
+  }
+
+  .site-header__panel-sub-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 1rem 1.5rem 1rem 4rem;
+    border: none;
+    background: none;
+    color: #e5e5e5;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .site-header__panel-chevron--sub {
+    transition: transform 0.2s ease;
+  }
+
+  .site-header__panel-child-block.is-expanded .site-header__panel-chevron--sub {
+    transform: rotate(90deg);
+  }
+
+  .site-header__panel-subchildren {
+    padding-bottom: 0.25rem;
+    overflow: hidden;
+    transition: max-height 0.2s ease;
+  }
+
+  .site-header__panel-subchildren[hidden] {
+    display: block;
+    max-height: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
+
+  .site-header__panel-child-block.is-expanded .site-header__panel-subchildren {
+    visibility: visible;
+  }
+
+  .site-header__panel-child-block .site-header__panel-item--view-all {
+    padding: 1rem 1.5rem 1rem 4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #e5e5e5;
+  }
+
+  .site-header__panel-item--subchild {
+    padding: 1rem 1.5rem 1rem 4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #e5e5e5;
+  }
+
+  /* Responsive */
   @media (max-width: 900px) {
     .site-header__top--desktop,
     .site-header__nav--desktop {
@@ -441,5 +902,40 @@ const { baseUrl = 'https://threepiece.us' } = Astro.props;
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') closeMenu();
     });
+
+    // Mobile panel: collapsible top-level and second-level categories
+    var panel = document.getElementById('header-panel');
+    if (panel) {
+      panel.addEventListener('click', function (e) {
+        var subBtn = e.target.closest('[data-panel-sub-toggle]');
+        if (subBtn) {
+          e.preventDefault();
+          var block = subBtn.closest('.site-header__panel-child-block');
+          var subChildren = block && block.querySelector('.site-header__panel-subchildren');
+          if (!block || !subChildren) return;
+          var expanded = block.classList.toggle('is-expanded');
+          subBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          if (expanded) {
+            subChildren.removeAttribute('hidden');
+          } else {
+            subChildren.setAttribute('hidden', '');
+          }
+          return;
+        }
+        var btn = e.target.closest('[data-panel-toggle]');
+        if (!btn) return;
+        e.preventDefault();
+        var group = btn.closest('.site-header__panel-group');
+        var children = group && group.querySelector('.site-header__panel-children');
+        if (!group || !children) return;
+        var expanded = group.classList.toggle('is-expanded');
+        btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        if (expanded) {
+          children.removeAttribute('hidden');
+        } else {
+          children.setAttribute('hidden', '');
+        }
+      });
+    }
   })();
 </script>
