@@ -1,9 +1,0 @@
-{
-  "redirects": [
-    {
-      "source": "/((?!vehicle-gallery|_render|_image|_astro|_server-islands|api).*)",
-      "destination": "https://threepiece.us/vehicle-gallery",
-      "permanent": false
-    }
-  ]
-}
