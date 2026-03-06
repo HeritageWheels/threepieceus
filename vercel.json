@@ -1,4 +1,5 @@
 {
+  "outputDirectory": ".vercel/output",
   "redirects": [
     {
       "source": "/((?!vehicle-gallery).*)",
