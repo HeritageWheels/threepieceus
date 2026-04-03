@@ -3,9 +3,8 @@ import { Image } from 'astro:assets';
 import VehicleGalleryLayout from '../../../layouts/VehicleGalleryLayout.astro';
 import { getVehicleSlug } from '../../../lib/vehicle-slug';
 import '../vehicle-gallery.scss';
-
-const placeholderWheelUrl = 'https://cdn11.bigcommerce.com/s-8zxb6tk/images/stencil/original/image-manager/placeholder-wheel.png?t=1775196191';
-const placeholderTireUrl = 'https://cdn11.bigcommerce.com/s-8zxb6tk/images/stencil/original/image-manager/placeholder-tire.jpg?t=1775196192';
+import placeholderWheel from '../../../assets/images/placeholder-wheel.jpg';
+import placeholderTire from '../../../assets/images/placeholder-tire.jpg';
 
 const apiBaseUrl = 'https://threepieceus-api-h83mp.ondigitalocean.app';
 
@@ -406,7 +405,7 @@ const schemaJsonLd = JSON.stringify({
 				<h3 class="explore-products__setup-title">Shop This Setup</h3>
 				<div class={`explore-products__images${!staggeredWheels && !staggeredTires ? ' explore-products__images--single' : ''}`}>
 				  <div class="explore-products__image-item" id="explore-front-wheel-card">
-					<Image src={placeholderWheelUrl} alt="Front Wheel" width={150} height={150} loading="lazy" />
+					<Image src={placeholderWheel} alt="Front Wheel" loading="lazy" />
 					<div class="explore-products__product-info">
 					  <strong>{vehicleData?.["wheel-brand"]} {vehicleData?.["wheel-model"]}</strong>
 					  <span>{frontWheelSize} +{vehicleData?.["front-offset"]}</span>
@@ -414,7 +413,7 @@ const schemaJsonLd = JSON.stringify({
 				  </div>
 				  {staggeredWheels && (
 				    <div class="explore-products__image-item" id="explore-rear-wheel-card">
-					  <Image src={placeholderWheelUrl} alt="Rear Wheel" width={150} height={150} loading="lazy" />
+					  <Image src={placeholderWheel} alt="Rear Wheel" loading="lazy" />
 					  <div class="explore-products__product-info">
 					    <strong>{vehicleData?.["wheel-brand"]} {vehicleData?.["wheel-model"]}</strong>
 					    <span>{rearWheelSize} +{vehicleData?.["rear-offset"]}</span>
@@ -423,7 +422,7 @@ const schemaJsonLd = JSON.stringify({
 				  )}
 				  <div class="explore-products__image-item" id="explore-front-tire-card">
 					<a id="explore-front-tire-link" href={frontTireSearchUrl || '#'} target="_blank" rel="noopener">
-					  <Image id="explore-front-tire-img" src={placeholderTireUrl} alt="Front Tire" width={150} height={150} loading="lazy" />
+					  <Image id="explore-front-tire-img" src={placeholderTire} alt="Front Tire" loading="lazy" />
 					</a>
 					<div class="explore-products__product-info">
 					  <strong id="explore-front-tire-name">{frontTireSize}</strong>
@@ -433,7 +432,7 @@ const schemaJsonLd = JSON.stringify({
 				  {staggeredTires && (
 				    <div class="explore-products__image-item" id="explore-rear-tire-card">
 					  <a id="explore-rear-tire-link" href={rearTireSearchUrl || '#'} target="_blank" rel="noopener">
-					    <Image id="explore-rear-tire-img" src={placeholderTireUrl} alt="Rear Tire" width={150} height={150} loading="lazy" />
+					    <Image id="explore-rear-tire-img" src={placeholderTire} alt="Rear Tire" loading="lazy" />
 					  </a>
 					  <div class="explore-products__product-info">
 					    <strong id="explore-rear-tire-name">{rearTireSize}</strong>
