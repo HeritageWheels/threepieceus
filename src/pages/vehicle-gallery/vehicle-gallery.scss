@@ -150,6 +150,8 @@ body {
     .tab {
       background-color: #1c1d21;
       width: 100%;
+      padding: 0.35rem 1rem;
+      box-sizing: border-box;
       h3 {
         text-align: center;
         color: #fff;
@@ -330,6 +332,292 @@ body {
 
       &:hover {
         background: rgba(0, 0, 0, 0.5);
+      }
+    }
+  }
+
+  // Explore Products Section
+  .explore-products {
+    margin-top: 2.5rem;
+
+    &__header {
+      background-color: #1c1d21;
+      padding: 0.35rem 1rem;
+
+      h2 {
+        margin: 0;
+        color: #fff;
+        font-size: 18px;
+        font-weight: 800;
+        text-transform: uppercase;
+        text-align: center;
+        letter-spacing: 0.05em;
+      }
+    }
+
+    &__cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      background-color: #e8e8e8;
+
+      @media screen and (max-width: $screen-small) {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1rem;
+      }
+    }
+
+    &__card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 1.5rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    &__card--package {
+      flex: 0 1 60%;
+
+      @media screen and (max-width: $screen-medium) {
+        flex: 0 1 100%;
+      }
+    }
+
+    &__setup-title {
+      margin: 0 0 1rem;
+      background-color: #dfab26;
+      color: #fff;
+      padding: 0.25rem 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      align-self: flex-start;
+
+      @media screen and (max-width: $screen-small) {
+        font-size: 1rem;
+      }
+    }
+
+    &__pricing {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      align-self: flex-start;
+    }
+
+    &__price-original {
+      background-color: #dfab26;
+      color: #fff;
+      padding: 0.25rem 0.75rem;
+      text-align: center;
+
+      .explore-products__price-amount {
+        font-size: 1.5rem;
+        font-weight: 800;
+        text-decoration: line-through;
+        display: block;
+      }
+
+      .explore-products__price-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        display: block;
+      }
+    }
+
+    &__price-package {
+      color: #1c1d21;
+      padding: 0.25rem 0.5rem;
+      text-align: center;
+
+      .explore-products__price-amount {
+        font-size: 1.75rem;
+        font-weight: 800;
+        display: block;
+      }
+
+      .explore-products__price-label {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #dfab26;
+        display: block;
+      }
+    }
+
+    &__images {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+      justify-content: center;
+
+      @media screen and (max-width: $screen-small) {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+    }
+
+    // Single item per row when not staggered
+    &__images--single {
+      @media screen and (max-width: $screen-small) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    &__image-item {
+      text-align: center;
+
+      img {
+        width: 150px;
+        height: 150px;
+        object-fit: contain;
+
+        @media screen and (max-width: $screen-small) {
+          width: 100px;
+          height: 100px;
+        }
+      }
+    }
+
+    &__product-info {
+      margin-top: 0.5rem;
+      max-width: 200px;
+
+      @media screen and (max-width: $screen-small) {
+        max-width: none;
+      }
+
+      strong {
+        display: block;
+        font-size: 17px;
+        font-weight: 700;
+
+        @media screen and (max-width: $screen-small) {
+          font-size: 1rem;
+        }
+      }
+
+      span {
+        display: block;
+        font-size: 17px;
+        color: #555;
+
+        @media screen and (max-width: $screen-small) {
+          font-size: 0.9rem;
+        }
+      }
+    }
+
+    &__btn--buy {
+      display: inline-block;
+      background-color: #dfab26;
+      color: #fff;
+      padding: 0.75rem 2rem;
+      font-size: 18px;
+      font-weight: 800;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+
+      &:hover {
+        background-color: #c99a1f;
+      }
+    }
+
+    &__card--accessories {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+
+      h3 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+
+        @media screen and (max-width: $screen-small) {
+          font-size: 1.1rem;
+        }
+      }
+    }
+
+    &__suspension-img {
+      max-width: 150px;
+      height: auto;
+      object-fit: contain;
+      margin: 0.75rem auto;
+
+      @media screen and (max-width: $screen-small) {
+        max-width: 100px;
+      }
+    }
+
+    &__vehicle-name {
+      font-size: 18px;
+      color: #555;
+      margin: 0 0 1.25rem;
+
+      @media screen and (max-width: $screen-small) {
+        font-size: 0.9rem;
+      }
+    }
+
+    &__add-icon {
+      display: inline-flex;
+      transition: transform 0.2s;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+
+      @media screen and (max-width: $screen-small) {
+        svg {
+          width: 48px;
+          height: 48px;
+        }
+      }
+    }
+
+    &__footer {
+      display: flex;
+      justify-content: center;
+      padding: 1.5rem 0 2rem;
+      background-color: #e8e8e8;
+    }
+
+    &__btn--fitment {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #fff;
+      color: #1c1d21;
+      border: 2px solid #1c1d21;
+      padding: 0.75rem 2.5rem;
+      font-size: 18px;
+      font-weight: 800;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: background 0.2s, color 0.2s;
+
+      &:hover {
+        background: #1c1d21;
+        color: #fff;
       }
     }
   }
