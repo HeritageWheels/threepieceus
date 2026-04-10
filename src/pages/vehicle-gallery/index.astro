@@ -1,0 +1,380 @@
+---
+import VehicleGalleryLayout from '../../layouts/VehicleGalleryLayout.astro';
+import './gallery.scss';
+
+const sampleVehicles = [
+  {
+    id: 1,
+    year: 1994,
+    make: 'Nissan',
+    model: '240SX',
+    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=1994+Nissan+240SX',
+    wheelBrand: 'Work Euroline Type N',
+    wheelSize: '18X9 20MM',
+    tireBrand: 'FAL Azenis FK510',
+    tireSize: '225/40R18',
+  },
+  {
+    id: 2,
+    year: 1989,
+    make: 'Nissan',
+    model: '240SX',
+    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=1989+Nissan+240SX',
+    wheelBrand: 'Rota Grid Drift',
+    wheelSize: '16X8 10MM',
+    tireBrand: 'Nankang NS-2',
+    tireSize: '205/50R16',
+  },
+  {
+    id: 3,
+    year: 2018,
+    make: 'Subaru',
+    model: 'WRX STI',
+    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=2018+Subaru+WRX+STI',
+    wheelBrand: 'Emotion Zr10',
+    wheelSize: '19X10.5 23MM',
+    tireBrand: 'CON ExtremeContact DWS06 Plus',
+    tireSize: '245/35R19',
+  },
+  {
+    id: 4,
+    year: 1995,
+    make: 'Mazda',
+    model: 'RX-7',
+    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=1995+Mazda+RX-7',
+    wheelBrand: 'Work Meister S1 3P',
+    wheelSize: '18X9.5 15MM',
+    tireBrand: 'Toyo Proxes R888R',
+    tireSize: '265/35R18',
+  },
+  {
+    id: 5,
+    year: 1993,
+    make: 'Mazda',
+    model: 'RX-7',
+    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=1993+Mazda+RX-7',
+    wheelBrand: 'Volk Racing TE37',
+    wheelSize: '17X9 22MM',
+    tireBrand: 'Federal 595 RS-RR',
+    tireSize: '255/40R17',
+  },
+  {
+    id: 6,
+    year: 2010,
+    make: 'Dodge',
+    model: 'Challenger',
+    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=2010+Dodge+Challenger',
+    wheelBrand: 'Ferrada FR2',
+    wheelSize: '20X10.5 25MM',
+    tireBrand: 'Nitto NT555 G2',
+    tireSize: '275/35R20',
+  },
+  {
+    id: 7,
+    year: 2015,
+    make: 'BMW',
+    model: 'M3',
+    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=2015+BMW+M3',
+    wheelBrand: 'BBS LM',
+    wheelSize: '19X9.5 22MM',
+    tireBrand: 'Michelin Pilot Sport 4S',
+    tireSize: '265/30R19',
+  },
+  {
+    id: 8,
+    year: 2020,
+    make: 'Toyota',
+    model: 'Supra',
+    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=2020+Toyota+Supra',
+    wheelBrand: 'Rays Gram Lights 57DR',
+    wheelSize: '19X9.5 38MM',
+    tireBrand: 'Continental SportContact 6',
+    tireSize: '275/30R19',
+  },
+  {
+    id: 9,
+    year: 2017,
+    make: 'Ford',
+    model: 'Mustang GT',
+    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=2017+Ford+Mustang+GT',
+    wheelBrand: 'Velgen VMB5',
+    wheelSize: '20X10 35MM',
+    tireBrand: 'Pirelli P Zero',
+    tireSize: '275/35R20',
+  },
+];
+
+const makes = [...new Set(sampleVehicles.map(v => v.make))].sort();
+const models = [...new Set(sampleVehicles.map(v => v.model))].sort();
+const years = [...new Set(sampleVehicles.map(v => v.year))].sort((a, b) => b - a);
+
+const diameters = ['15"', '16"', '17"', '18"', '19"', '20"'];
+const widths = ['7"', '7.5"', '8"', '8.5"', '9"', '9.5"', '10"', '10.5"'];
+const offsets = ['0-10mm', '10-20mm', '20-30mm', '30-40mm', '40+mm'];
+
+const tireWidths = ['205', '215', '225', '235', '245', '255', '265', '275'];
+const tireAspects = ['30', '35', '40', '45', '50'];
+const tireRims = ['16', '17', '18', '19', '20'];
+
+const wheelBrands = ['Work', 'Rota', 'Emotion', 'Volk Racing', 'BBS', 'Rays', 'Velgen', 'Ferrada', 'SSR', 'CCW'];
+const tireBrands = ['FAL', 'Nankang', 'Continental', 'Toyo', 'Federal', 'Nitto', 'Michelin', 'Pirelli'];
+const suspensionTypes = ['Coilovers', 'Air Suspension', 'Lowering Springs', 'Stock', 'Static'];
+const stanceTypes = ['Flush', 'Poke', 'Tuck', 'Stretched', 'Aggressive'];
+const spacerOptions = ['None', '5mm', '10mm', '15mm', '20mm', '25mm'];
+const fenderModOptions = ['None', 'Rolled', 'Pulled', 'Cut', 'Widebody'];
+const rubbingOptions = ['None', 'Slight', 'Moderate', 'Heavy'];
+
+const mobileFilters = [
+  { key: 'diameter', label: 'DIAMETER', options: diameters },
+  { key: 'width', label: 'WIDTH', options: widths },
+  { key: 'offset', label: 'OFFSET', options: offsets },
+  { key: 'width-height', label: 'WIDTH / HEIGHT', options: tireWidths },
+  { key: 'aspect-width', label: 'ASPECT / WIDTH', options: tireAspects },
+  { key: 'rim', label: 'RIM', options: tireRims },
+  { key: 'make', label: 'MAKE', options: makes },
+  { key: 'model', label: 'MODEL', options: models },
+  { key: 'year', label: 'YEAR', options: years.map(String) },
+  { key: 'wheel-brand', label: 'WHEEL BRAND', options: wheelBrands },
+  { key: 'tire-brand', label: 'TIRE BRAND', options: tireBrands },
+  { key: 'suspension-type', label: 'SUSPENSION TYPE', options: suspensionTypes },
+  { key: 'stance', label: 'STANCE', options: stanceTypes },
+  { key: 'spacer', label: 'SPACER', options: spacerOptions },
+  { key: 'fender-mods', label: 'FENDER MODS', options: fenderModOptions },
+  { key: 'rubbing', label: 'RUBBING', options: rubbingOptions },
+];
+---
+
+<VehicleGalleryLayout pageTitle="Vehicle Gallery | ThreePieceUs">
+  <div id="gallery-page">
+    <div class="gallery-container">
+      <div class="gallery-breadcrumbs">
+        <a href="/">Home</a>
+        <span class="breadcrumbs-sep">/</span>
+        <span class="breadcrumbs-current">Threepieceus Gallery</span>
+      </div>
+
+      <h1 class="gallery-title">THREEPIECEUS GALLERY</h1>
+
+      <!-- Mobile Filter Toggle -->
+      <button class="mobile-filter-toggle" id="mobile-filter-toggle">
+        <span>FILTERS</span>
+      </button>
+
+      <!-- Mobile Filter Modal -->
+      <div class="mobile-filter-overlay" id="mobile-filter-overlay" aria-hidden="true">
+        <div class="mobile-filter-modal">
+          <div class="mobile-filter-modal__header">
+            <div class="mobile-filter-modal__title-group">
+              <h2 class="mobile-filter-modal__title">FILTERS</h2>
+              <span class="mobile-filter-modal__count"><span id="mobile-results-count">{sampleVehicles.length}</span> Results</span>
+            </div>
+            <div class="mobile-filter-modal__actions">
+              <button class="mobile-filter-modal__btn mobile-filter-modal__btn--clear" id="mobile-filter-clear">CLEAR</button>
+              <button class="mobile-filter-modal__btn mobile-filter-modal__btn--done" id="mobile-filter-done">DONE</button>
+            </div>
+          </div>
+          <div class="mobile-filter-modal__divider"></div>
+          <div class="mobile-filter-modal__list">
+            {mobileFilters.map(filter => (
+              <div class="mobile-filter-modal__group" data-mobile-filter={filter.key}>
+                <button class="mobile-filter-modal__row" type="button">
+                  <span>{filter.label}</span>
+                  <span class="mobile-filter-modal__chevron">&#x2039;</span>
+                </button>
+                <div class="mobile-filter-modal__options">
+                  {filter.options.map(opt => (
+                    <label class="mobile-filter-modal__option">
+                      <input type="checkbox" name={`mobile-${filter.key}`} value={opt} />
+                      <span>{opt}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-layout">
+        <!-- Sidebar Filters -->
+        <aside class="gallery-sidebar">
+          <div class="filter-section">
+            <h3 class="filter-heading">SELECT YOUR VEHICLE</h3>
+            <div class="filter-group">
+              <div class="select-wrapper">
+                <select id="filter-make">
+                  <option value="">Make</option>
+                  {makes.map(make => <option value={make}>{make}</option>)}
+                </select>
+              </div>
+              <div class="select-wrapper">
+                <select id="filter-model">
+                  <option value="">Model</option>
+                  {models.map(model => <option value={model}>{model}</option>)}
+                </select>
+              </div>
+              <div class="select-wrapper">
+                <select id="filter-year">
+                  <option value="">Year</option>
+                  {years.map(year => <option value={String(year)}>{year}</option>)}
+                </select>
+              </div>
+              <button class="btn-clear" data-filter-group="vehicle">CLEAR</button>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <h3 class="filter-heading">SHOP WHEELS</h3>
+            <div class="filter-group">
+              <div class="select-wrapper">
+                <select id="filter-diameter">
+                  <option value="">Diameter</option>
+                  {diameters.map(d => <option value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div class="select-wrapper">
+                <select id="filter-width">
+                  <option value="">Width</option>
+                  {widths.map(w => <option value={w}>{w}</option>)}
+                </select>
+              </div>
+              <div class="select-wrapper">
+                <select id="filter-offset">
+                  <option value="">Offset</option>
+                  {offsets.map(o => <option value={o}>{o}</option>)}
+                </select>
+              </div>
+              <button class="btn-clear" data-filter-group="wheels">CLEAR</button>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <h3 class="filter-heading">SHOP TIRES</h3>
+            <div class="filter-group">
+              <div class="select-wrapper">
+                <select id="filter-tire-width">
+                  <option value="">Width / Height</option>
+                  {tireWidths.map(tw => <option value={tw}>{tw}</option>)}
+                </select>
+              </div>
+              <div class="select-wrapper">
+                <select id="filter-tire-aspect">
+                  <option value="">Aspect Ratio</option>
+                  {tireAspects.map(ta => <option value={ta}>{ta}</option>)}
+                </select>
+              </div>
+              <div class="select-wrapper">
+                <select id="filter-tire-rim">
+                  <option value="">Rim Size</option>
+                  {tireRims.map(tr => <option value={tr}>{tr}</option>)}
+                </select>
+              </div>
+              <button class="btn-clear" data-filter-group="tires">CLEAR</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Vehicle Grid -->
+        <main class="gallery-main">
+          <p class="gallery-results-count"><span id="results-count">{sampleVehicles.length}</span> results</p>
+
+          <div class="gallery-grid" id="gallery-grid">
+            {sampleVehicles.map(vehicle => (
+              <a class="vehicle-card" href={`/vehicle-gallery/${vehicle.id}/${vehicle.year}-${vehicle.make}-${vehicle.model}`.toLowerCase().replace(/\s+/g, '-')} data-make={vehicle.make} data-model={vehicle.model} data-year={String(vehicle.year)}>
+                <div class="vehicle-card__header">
+                  <span>{vehicle.year} {vehicle.make} {vehicle.model}</span>
+                </div>
+                <div class="vehicle-card__image">
+                  <img src={vehicle.image} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} loading="lazy" />
+                </div>
+                <div class="vehicle-card__details">
+                  <p class="wheel-brand">{vehicle.wheelBrand}</p>
+                  <p class="wheel-size">{vehicle.wheelSize}</p>
+                  <p class="tire-brand">{vehicle.tireBrand}</p>
+                  <p class="tire-size">{vehicle.tireSize}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+</VehicleGalleryLayout>
+
+<script is:inline>
+  // Desktop clear buttons
+  document.querySelectorAll('.btn-clear').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.getAttribute('data-filter-group');
+      let selects = [];
+      if (group === 'vehicle') {
+        selects = ['filter-make', 'filter-model', 'filter-year'];
+      } else if (group === 'wheels') {
+        selects = ['filter-diameter', 'filter-width', 'filter-offset'];
+      } else if (group === 'tires') {
+        selects = ['filter-tire-width', 'filter-tire-aspect', 'filter-tire-rim'];
+      }
+      selects.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.selectedIndex = 0;
+      });
+    });
+  });
+
+  // Mobile filter modal
+  (function () {
+    var toggleBtn = document.getElementById('mobile-filter-toggle');
+    var overlay = document.getElementById('mobile-filter-overlay');
+    var doneBtn = document.getElementById('mobile-filter-done');
+    var clearBtn = document.getElementById('mobile-filter-clear');
+
+    if (!toggleBtn || !overlay) return;
+
+    function openModal() {
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    toggleBtn.addEventListener('click', openModal);
+    if (doneBtn) doneBtn.addEventListener('click', closeModal);
+
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
+    });
+
+    // Accordion toggle for filter rows
+    var filterList = document.querySelector('.mobile-filter-modal__list');
+    if (filterList) {
+      filterList.addEventListener('click', function (e) {
+        var row = e.target.closest('.mobile-filter-modal__row');
+        if (!row) return;
+        var group = row.closest('.mobile-filter-modal__group');
+        if (!group) return;
+        group.classList.toggle('is-expanded');
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        // Clear desktop selects
+        var allSelects = document.querySelectorAll('.gallery-sidebar select');
+        allSelects.forEach(function (sel) { sel.selectedIndex = 0; });
+        // Clear mobile checkboxes
+        var allChecks = document.querySelectorAll('.mobile-filter-modal__option input[type="checkbox"]');
+        allChecks.forEach(function (cb) { cb.checked = false; });
+      });
+    }
+  })();
+</script>
