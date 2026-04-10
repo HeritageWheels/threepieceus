@@ -2,127 +2,136 @@
 import VehicleGalleryLayout from '../../layouts/VehicleGalleryLayout.astro';
 import './gallery.scss';
 
-const sampleVehicles = [
-  {
-    id: 1,
-    year: 1994,
-    make: 'Nissan',
-    model: '240SX',
-    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=1994+Nissan+240SX',
-    wheelBrand: 'Work Euroline Type N',
-    wheelSize: '18X9 20MM',
-    tireBrand: 'FAL Azenis FK510',
-    tireSize: '225/40R18',
-  },
-  {
-    id: 2,
-    year: 1989,
-    make: 'Nissan',
-    model: '240SX',
-    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=1989+Nissan+240SX',
-    wheelBrand: 'Rota Grid Drift',
-    wheelSize: '16X8 10MM',
-    tireBrand: 'Nankang NS-2',
-    tireSize: '205/50R16',
-  },
-  {
-    id: 3,
-    year: 2018,
-    make: 'Subaru',
-    model: 'WRX STI',
-    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=2018+Subaru+WRX+STI',
-    wheelBrand: 'Emotion Zr10',
-    wheelSize: '19X10.5 23MM',
-    tireBrand: 'CON ExtremeContact DWS06 Plus',
-    tireSize: '245/35R19',
-  },
-  {
-    id: 4,
-    year: 1995,
-    make: 'Mazda',
-    model: 'RX-7',
-    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=1995+Mazda+RX-7',
-    wheelBrand: 'Work Meister S1 3P',
-    wheelSize: '18X9.5 15MM',
-    tireBrand: 'Toyo Proxes R888R',
-    tireSize: '265/35R18',
-  },
-  {
-    id: 5,
-    year: 1993,
-    make: 'Mazda',
-    model: 'RX-7',
-    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=1993+Mazda+RX-7',
-    wheelBrand: 'Volk Racing TE37',
-    wheelSize: '17X9 22MM',
-    tireBrand: 'Federal 595 RS-RR',
-    tireSize: '255/40R17',
-  },
-  {
-    id: 6,
-    year: 2010,
-    make: 'Dodge',
-    model: 'Challenger',
-    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=2010+Dodge+Challenger',
-    wheelBrand: 'Ferrada FR2',
-    wheelSize: '20X10.5 25MM',
-    tireBrand: 'Nitto NT555 G2',
-    tireSize: '275/35R20',
-  },
-  {
-    id: 7,
-    year: 2015,
-    make: 'BMW',
-    model: 'M3',
-    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=2015+BMW+M3',
-    wheelBrand: 'BBS LM',
-    wheelSize: '19X9.5 22MM',
-    tireBrand: 'Michelin Pilot Sport 4S',
-    tireSize: '265/30R19',
-  },
-  {
-    id: 8,
-    year: 2020,
-    make: 'Toyota',
-    model: 'Supra',
-    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=2020+Toyota+Supra',
-    wheelBrand: 'Rays Gram Lights 57DR',
-    wheelSize: '19X9.5 38MM',
-    tireBrand: 'Continental SportContact 6',
-    tireSize: '275/30R19',
-  },
-  {
-    id: 9,
-    year: 2017,
-    make: 'Ford',
-    model: 'Mustang GT',
-    image: 'https://placehold.co/400x300/1c1d21/ffffff?text=2017+Ford+Mustang+GT',
-    wheelBrand: 'Velgen VMB5',
-    wheelSize: '20X10 35MM',
-    tireBrand: 'Pirelli P Zero',
-    tireSize: '275/35R20',
-  },
+const apiBaseUrl = 'https://threepieceus-api-h83mp.ondigitalocean.app';
+
+let allVehicles: any[] = [];
+try {
+  const res = await fetch(`${apiBaseUrl}/fitment-gallery/approved/vehicles`);
+  if (res.ok) {
+    allVehicles = await res.json();
+  }
+} catch (e) {
+  console.error('Failed to fetch vehicles:', e);
+}
+
+// Shuffle vehicles
+for (let i = allVehicles.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [allVehicles[i], allVehicles[j]] = [allVehicles[j], allVehicles[i]];
+}
+
+// Slim vehicle data for client-side filtering + rendering
+const vehiclesJson = allVehicles.map(v => ({
+  id: v.id,
+  year: v.year || '',
+  make: v.make || '',
+  model: v.model || '',
+  'wheel-brand': v['wheel-brand'] || '',
+  'wheel-model': v['wheel-model'] || '',
+  'tire-brand': v['tire-brand'] || '',
+  'tire-model': v['tire-model'] || '',
+  'front-diameter': v['front-diameter'] || '',
+  'front-width': v['front-width'] || '',
+  'front-offset': v['front-offset'] || '',
+  'front-tire-size': v['front-tire-size'] || '',
+  'front-aspect-ratio': v['front-aspect-ratio'] || '',
+  'rear-diameter': v['rear-diameter'] || '',
+  'suspension-type': v['suspension-type'] || '',
+  'stance': v['stance'] || '',
+  'front-spacer': v['front-spacer'] || '',
+  'rear-spacer': v['rear-spacer'] || '',
+  'front-fender-mods': v['front-fender-mods'] || '',
+  'rear-fender-mods': v['rear-fender-mods'] || '',
+  'front-rubbing': v['front-rubbing'] || '',
+  'rear-rubbing': v['rear-rubbing'] || '',
+  url: v.url || '',
+  image: v['image-1'] || '',
+}));
+
+// Helper to extract unique sorted values from a field (uses all vehicles for filters)
+function uniqueSorted(field: string): string[] {
+  return [...new Set(allVehicles.map(v => v[field]).filter(Boolean))].sort() as string[];
+}
+
+// Derive filter options from real data
+const makes = uniqueSorted('make');
+const models = uniqueSorted('model');
+const years = [...new Set(allVehicles.map(v => v.year).filter(Boolean))].sort((a, b) => Number(b) - Number(a));
+const diameters = uniqueSorted('front-diameter');
+const widths = uniqueSorted('front-width');
+const offsets = uniqueSorted('front-offset');
+const tireWidths = uniqueSorted('front-tire-size');
+const tireAspects = uniqueSorted('front-aspect-ratio');
+const rims = uniqueSorted('rear-diameter');
+const wheelBrands = uniqueSorted('wheel-brand');
+const tireBrands = uniqueSorted('tire-brand');
+const suspensionTypes = uniqueSorted('suspension-type');
+const stanceTypes = uniqueSorted('stance');
+const spacerOptions = [...new Set([
+  ...allVehicles.map(v => v['front-spacer']).filter(Boolean),
+  ...allVehicles.map(v => v['rear-spacer']).filter(Boolean),
+])].sort();
+const fenderModOptions = [...new Set([
+  ...allVehicles.map(v => v['front-fender-mods']).filter(Boolean),
+  ...allVehicles.map(v => v['rear-fender-mods']).filter(Boolean),
+])].sort();
+const rubbingOptions = [...new Set([
+  ...allVehicles.map(v => v['front-rubbing']).filter(Boolean),
+  ...allVehicles.map(v => v['rear-rubbing']).filter(Boolean),
+])].sort();
+
+// Build counted options for checkbox filters
+function countedOptions(field: string): { value: string; count: number }[] {
+  const counts: Record<string, number> = {};
+  allVehicles.forEach(v => {
+    const val = v[field];
+    if (val) counts[val] = (counts[val] || 0) + 1;
+  });
+  return Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)).map(([value, count]) => ({ value, count }));
+}
+
+function countedOptionsCombined(fields: string[]): { value: string; count: number }[] {
+  const counts: Record<string, number> = {};
+  allVehicles.forEach(v => {
+    const seen = new Set<string>();
+    fields.forEach(f => {
+      const val = v[f];
+      if (val && !seen.has(val)) {
+        seen.add(val);
+        counts[val] = (counts[val] || 0) + 1;
+      }
+    });
+  });
+  return Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)).map(([value, count]) => ({ value, count }));
+}
+
+const checkboxFilters = [
+  { key: 'wheel-brand', label: 'WHEEL BRAND', placeholder: 'Enter Wheel Brand...', options: countedOptions('wheel-brand') },
+  { key: 'tire-brand', label: 'TIRE BRAND', placeholder: 'Enter Tire Brand...', options: countedOptions('tire-brand') },
+  { key: 'suspension-type', label: 'SUSPENSION TYPE', placeholder: 'Enter Suspension Type...', options: countedOptions('suspension-type') },
+  { key: 'stance', label: 'STANCE', placeholder: 'Enter Stance...', options: countedOptions('stance') },
+  { key: 'spacer', label: 'SPACER', placeholder: 'Enter Spacer...', options: countedOptionsCombined(['front-spacer', 'rear-spacer']) },
+  { key: 'fender-mods', label: 'FENDER MODS', placeholder: 'Enter Fender Mods...', options: countedOptionsCombined(['front-fender-mods', 'rear-fender-mods']) },
+  { key: 'rubbing', label: 'RUBBING', placeholder: 'Enter Rubbing...', options: countedOptionsCombined(['front-rubbing', 'rear-rubbing']) },
 ];
 
-const makes = [...new Set(sampleVehicles.map(v => v.make))].sort();
-const models = [...new Set(sampleVehicles.map(v => v.model))].sort();
-const years = [...new Set(sampleVehicles.map(v => v.year))].sort((a, b) => b - a);
-
-const diameters = ['15"', '16"', '17"', '18"', '19"', '20"'];
-const widths = ['7"', '7.5"', '8"', '8.5"', '9"', '9.5"', '10"', '10.5"'];
-const offsets = ['0-10mm', '10-20mm', '20-30mm', '30-40mm', '40+mm'];
-
-const tireWidths = ['205', '215', '225', '235', '245', '255', '265', '275'];
-const tireAspects = ['30', '35', '40', '45', '50'];
-const tireRims = ['16', '17', '18', '19', '20'];
-
-const wheelBrands = ['Work', 'Rota', 'Emotion', 'Volk Racing', 'BBS', 'Rays', 'Velgen', 'Ferrada', 'SSR', 'CCW'];
-const tireBrands = ['FAL', 'Nankang', 'Continental', 'Toyo', 'Federal', 'Nitto', 'Michelin', 'Pirelli'];
-const suspensionTypes = ['Coilovers', 'Air Suspension', 'Lowering Springs', 'Stock', 'Static'];
-const stanceTypes = ['Flush', 'Poke', 'Tuck', 'Stretched', 'Aggressive'];
-const spacerOptions = ['None', '5mm', '10mm', '15mm', '20mm', '25mm'];
-const fenderModOptions = ['None', 'Rolled', 'Pulled', 'Cut', 'Widebody'];
-const rubbingOptions = ['None', 'Slight', 'Moderate', 'Heavy'];
+// Build cascading vehicle lookup: make → model → years
+const vehicleLookup: Record<string, Record<string, string[]>> = {};
+allVehicles.forEach(v => {
+  const make = v.make;
+  const model = v.model;
+  const year = v.year;
+  if (!make || !model || !year) return;
+  if (!vehicleLookup[make]) vehicleLookup[make] = {};
+  if (!vehicleLookup[make][model]) vehicleLookup[make][model] = [];
+  if (!vehicleLookup[make][model].includes(year)) {
+    vehicleLookup[make][model].push(year);
+  }
+});
+// Sort years descending within each model
+Object.values(vehicleLookup).forEach(models => {
+  Object.values(models).forEach(years => years.sort((a, b) => Number(b) - Number(a)));
+});
 
 const mobileFilters = [
   { key: 'diameter', label: 'DIAMETER', options: diameters },
@@ -130,10 +139,10 @@ const mobileFilters = [
   { key: 'offset', label: 'OFFSET', options: offsets },
   { key: 'width-height', label: 'WIDTH / HEIGHT', options: tireWidths },
   { key: 'aspect-width', label: 'ASPECT / WIDTH', options: tireAspects },
-  { key: 'rim', label: 'RIM', options: tireRims },
+  { key: 'rim', label: 'RIM', options: rims },
   { key: 'make', label: 'MAKE', options: makes },
   { key: 'model', label: 'MODEL', options: models },
-  { key: 'year', label: 'YEAR', options: years.map(String) },
+  { key: 'year', label: 'YEAR', options: years },
   { key: 'wheel-brand', label: 'WHEEL BRAND', options: wheelBrands },
   { key: 'tire-brand', label: 'TIRE BRAND', options: tireBrands },
   { key: 'suspension-type', label: 'SUSPENSION TYPE', options: suspensionTypes },
@@ -166,7 +175,7 @@ const mobileFilters = [
           <div class="mobile-filter-modal__header">
             <div class="mobile-filter-modal__title-group">
               <h2 class="mobile-filter-modal__title">FILTERS</h2>
-              <span class="mobile-filter-modal__count"><span id="mobile-results-count">{sampleVehicles.length}</span> Results</span>
+              <span class="mobile-filter-modal__count"><span id="mobile-results-count">{allVehicles.length}</span> Results</span>
             </div>
             <div class="mobile-filter-modal__actions">
               <button class="mobile-filter-modal__btn mobile-filter-modal__btn--clear" id="mobile-filter-clear">CLEAR</button>
@@ -266,71 +275,487 @@ const mobileFilters = [
               <div class="select-wrapper">
                 <select id="filter-tire-rim">
                   <option value="">Rim Size</option>
-                  {tireRims.map(tr => <option value={tr}>{tr}</option>)}
+                  {rims.map(tr => <option value={tr}>{tr}</option>)}
                 </select>
               </div>
               <button class="btn-clear" data-filter-group="tires">CLEAR</button>
             </div>
           </div>
+
+          {checkboxFilters.map(filter => (
+            <div class="filter-checkbox-section is-expanded" data-checkbox-filter={filter.key}>
+              <button class="filter-checkbox-section__header" type="button">
+                <h3 class="filter-heading">{filter.label}</h3>
+                <span class="filter-checkbox-section__chevron">&#x2039;</span>
+              </button>
+              <div class="filter-checkbox-section__body">
+                <input type="text" class="filter-checkbox-search" placeholder={filter.placeholder} />
+                <div class="filter-checkbox-list">
+                  {filter.options.map((opt, i) => (
+                    <label class={`filter-checkbox-item ${i >= 8 ? 'is-overflow' : ''}`}>
+                      <input type="checkbox" name={`desktop-${filter.key}`} value={opt.value} />
+                      <span class="filter-checkbox-item__label">{opt.value}</span>
+                      <span class="filter-checkbox-item__count">{opt.count}</span>
+                    </label>
+                  ))}
+                </div>
+                {filter.options.length > 8 && (
+                  <button class="filter-checkbox-show-more" type="button">Show More</button>
+                )}
+              </div>
+            </div>
+          ))}
         </aside>
 
         <!-- Vehicle Grid -->
         <main class="gallery-main">
-          <p class="gallery-results-count"><span id="results-count">{sampleVehicles.length}</span> results</p>
+          <p class="gallery-results-count"><span id="results-count">{allVehicles.length}</span> results</p>
 
-          <div class="gallery-grid" id="gallery-grid">
-            {sampleVehicles.map(vehicle => (
-              <a class="vehicle-card" href={`/vehicle-gallery/${vehicle.id}/${vehicle.year}-${vehicle.make}-${vehicle.model}`.toLowerCase().replace(/\s+/g, '-')} data-make={vehicle.make} data-model={vehicle.model} data-year={String(vehicle.year)}>
-                <div class="vehicle-card__header">
-                  <span>{vehicle.year} {vehicle.make} {vehicle.model}</span>
-                </div>
-                <div class="vehicle-card__image">
-                  <img src={vehicle.image} alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`} loading="lazy" />
-                </div>
-                <div class="vehicle-card__details">
-                  <p class="wheel-brand">{vehicle.wheelBrand}</p>
-                  <p class="wheel-size">{vehicle.wheelSize}</p>
-                  <p class="tire-brand">{vehicle.tireBrand}</p>
-                  <p class="tire-size">{vehicle.tireSize}</p>
-                </div>
-              </a>
-            ))}
-          </div>
+          <div class="gallery-grid" id="gallery-grid"></div>
+
+          <nav class="gallery-pagination" id="gallery-pagination" aria-label="Pagination"></nav>
         </main>
       </div>
     </div>
   </div>
 </VehicleGalleryLayout>
 
+<script is:inline id="vehicle-lookup-data" type="application/json" set:html={JSON.stringify(vehicleLookup)}></script>
+<script is:inline id="vehicles-data" type="application/json" set:html={JSON.stringify(vehiclesJson)}></script>
+
 <script is:inline>
-  // Desktop clear buttons
-  document.querySelectorAll('.btn-clear').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const group = btn.getAttribute('data-filter-group');
-      let selects = [];
-      if (group === 'vehicle') {
-        selects = ['filter-make', 'filter-model', 'filter-year'];
-      } else if (group === 'wheels') {
-        selects = ['filter-diameter', 'filter-width', 'filter-offset'];
-      } else if (group === 'tires') {
-        selects = ['filter-tire-width', 'filter-tire-aspect', 'filter-tire-rim'];
+(function () {
+  // ── Vehicle cascading dropdown data ──
+  var vehicleLookup = JSON.parse(document.getElementById('vehicle-lookup-data').textContent);
+
+  // ── Filter persistence via URL params ──
+  function getFilterState() {
+    var state = {};
+    // Selects
+    for (var id in selectFilters) {
+      var sel = document.getElementById(id);
+      if (sel && sel.value) state[id] = sel.value;
+    }
+    // Desktop checkboxes
+    document.querySelectorAll('.filter-checkbox-section input[type="checkbox"]:checked').forEach(function (cb) {
+      if (!state[cb.name]) state[cb.name] = [];
+      state[cb.name].push(cb.value);
+    });
+    // Mobile checkboxes
+    document.querySelectorAll('.mobile-filter-modal__option input[type="checkbox"]:checked').forEach(function (cb) {
+      if (!state[cb.name]) state[cb.name] = [];
+      state[cb.name].push(cb.value);
+    });
+    return state;
+  }
+
+  function saveFiltersToUrl() {
+    var state = getFilterState();
+    var params = new URLSearchParams();
+    if (currentPage > 1) params.set('page', currentPage);
+    for (var key in state) {
+      var val = state[key];
+      if (Array.isArray(val)) {
+        params.set(key, val.join(','));
+      } else {
+        params.set(key, val);
       }
-      selects.forEach(id => {
-        const el = document.getElementById(id);
+    }
+    var qs = params.toString();
+    var newUrl = window.location.pathname + (qs ? '?' + qs : '');
+    history.replaceState(null, '', newUrl);
+  }
+
+  function restoreFiltersFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    // Restore selects (cascading make→model→year first)
+    var makeVal = params.get('filter-make') || '';
+    var modelVal = params.get('filter-model') || '';
+    var yearVal = params.get('filter-year') || '';
+    if (makeSelect && makeVal) {
+      makeSelect.value = makeVal;
+      updateModelOptions();
+      if (modelVal) {
+        modelSelect.value = modelVal;
+        updateYearOptions();
+      }
+      if (yearVal) yearSelect.value = yearVal;
+    }
+    // Restore other selects
+    for (var id in selectFilters) {
+      if (['filter-make', 'filter-model', 'filter-year'].indexOf(id) !== -1) continue;
+      var val = params.get(id);
+      if (val) {
+        var sel = document.getElementById(id);
+        if (sel) sel.value = val;
+      }
+    }
+    // Restore desktop checkboxes
+    document.querySelectorAll('.filter-checkbox-section input[type="checkbox"]').forEach(function (cb) {
+      var vals = params.get(cb.name);
+      if (vals) {
+        cb.checked = vals.split(',').indexOf(cb.value) !== -1;
+      }
+    });
+    // Restore mobile checkboxes
+    document.querySelectorAll('.mobile-filter-modal__option input[type="checkbox"]').forEach(function (cb) {
+      var vals = params.get(cb.name);
+      if (vals) {
+        cb.checked = vals.split(',').indexOf(cb.value) !== -1;
+      }
+    });
+    // Restore page
+    var pageParam = params.get('page');
+    if (pageParam) currentPage = Math.max(1, Number(pageParam));
+  }
+
+  // ── Filter definitions ──
+  // Desktop selects: filter id → data attribute on card
+  var selectFilters = {
+    'filter-make': 'make',
+    'filter-model': 'model',
+    'filter-year': 'year',
+    'filter-diameter': 'front-diameter',
+    'filter-width': 'front-width',
+    'filter-offset': 'front-offset',
+    'filter-tire-width': 'front-tire-size',
+    'filter-tire-aspect': 'front-aspect-ratio',
+    'filter-tire-rim': 'rear-diameter',
+  };
+
+  // Desktop checkbox filters: checkbox name → data attributes (any match)
+  var checkboxFilterMap = {
+    'desktop-wheel-brand': ['wheel-brand'],
+    'desktop-tire-brand': ['tire-brand'],
+    'desktop-suspension-type': ['suspension-type'],
+    'desktop-stance': ['stance'],
+    'desktop-spacer': ['front-spacer', 'rear-spacer'],
+    'desktop-fender-mods': ['front-fender-mods', 'rear-fender-mods'],
+    'desktop-rubbing': ['front-rubbing', 'rear-rubbing'],
+  };
+
+  // Mobile checkbox filters: checkbox name → data attributes (any match)
+  var mobileFilterMap = {
+    'mobile-diameter': ['front-diameter'],
+    'mobile-width': ['front-width'],
+    'mobile-offset': ['front-offset'],
+    'mobile-width-height': ['front-tire-size'],
+    'mobile-aspect-width': ['front-aspect-ratio'],
+    'mobile-rim': ['rear-diameter'],
+    'mobile-make': ['make'],
+    'mobile-model': ['model'],
+    'mobile-year': ['year'],
+    'mobile-wheel-brand': ['wheel-brand'],
+    'mobile-tire-brand': ['tire-brand'],
+    'mobile-suspension-type': ['suspension-type'],
+    'mobile-stance': ['stance'],
+    'mobile-spacer': ['front-spacer', 'rear-spacer'],
+    'mobile-fender-mods': ['front-fender-mods', 'rear-fender-mods'],
+    'mobile-rubbing': ['front-rubbing', 'rear-rubbing'],
+  };
+
+  // ── Cascading vehicle dropdowns ──
+  var makeSelect = document.getElementById('filter-make');
+  var modelSelect = document.getElementById('filter-model');
+  var yearSelect = document.getElementById('filter-year');
+
+  function populateSelect(sel, options, placeholder) {
+    var current = sel.value;
+    sel.innerHTML = '';
+    var defaultOpt = document.createElement('option');
+    defaultOpt.value = '';
+    defaultOpt.textContent = placeholder;
+    sel.appendChild(defaultOpt);
+    options.forEach(function (val) {
+      var opt = document.createElement('option');
+      opt.value = val;
+      opt.textContent = val;
+      if (val === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  function updateModelOptions() {
+    var make = makeSelect.value;
+    if (!make) {
+      // Show all models
+      var allModels = [];
+      Object.keys(vehicleLookup).forEach(function (m) {
+        Object.keys(vehicleLookup[m]).forEach(function (mod) {
+          if (allModels.indexOf(mod) === -1) allModels.push(mod);
+        });
+      });
+      populateSelect(modelSelect, allModels.sort(), 'Model');
+    } else {
+      var models = vehicleLookup[make] ? Object.keys(vehicleLookup[make]).sort() : [];
+      populateSelect(modelSelect, models, 'Model');
+    }
+    updateYearOptions();
+  }
+
+  function updateYearOptions() {
+    var make = makeSelect.value;
+    var model = modelSelect.value;
+    var years = [];
+    if (make && model && vehicleLookup[make] && vehicleLookup[make][model]) {
+      years = vehicleLookup[make][model];
+    } else if (make && vehicleLookup[make]) {
+      Object.values(vehicleLookup[make]).forEach(function (yrs) {
+        yrs.forEach(function (y) { if (years.indexOf(y) === -1) years.push(y); });
+      });
+      years.sort(function (a, b) { return Number(b) - Number(a); });
+    } else {
+      var allYears = [];
+      Object.values(vehicleLookup).forEach(function (models) {
+        Object.values(models).forEach(function (yrs) {
+          yrs.forEach(function (y) { if (allYears.indexOf(y) === -1) allYears.push(y); });
+        });
+      });
+      years = allYears.sort(function (a, b) { return Number(b) - Number(a); });
+    }
+    populateSelect(yearSelect, years, 'Year');
+  }
+
+  if (makeSelect && modelSelect && yearSelect) {
+    makeSelect.addEventListener('change', function () {
+      updateModelOptions();
+      applyFilters();
+    });
+    modelSelect.addEventListener('change', function () {
+      updateYearOptions();
+      applyFilters();
+    });
+    yearSelect.addEventListener('change', applyFilters);
+  }
+
+  var allVehicles = JSON.parse(document.getElementById('vehicles-data').textContent);
+  var grid = document.getElementById('gallery-grid');
+  var resultsCount = document.getElementById('results-count');
+  var mobileResultsCount = document.getElementById('mobile-results-count');
+  var paginationNav = document.getElementById('gallery-pagination');
+  var ITEMS_PER_PAGE = 30;
+  var currentPage = 1;
+
+  function getCheckedValues(name) {
+    var checked = document.querySelectorAll('input[name="' + name + '"]:checked');
+    if (checked.length === 0) return null;
+    var vals = []; checked.forEach(function (cb) { vals.push(cb.value); }); return vals;
+  }
+
+  function vehicleMatches(v, sVals, cVals, mVals) {
+    for (var id in sVals) { if (sVals[id] && v[selectFilters[id]] !== sVals[id]) return false; }
+    for (var n in cVals) { if (!cVals[n]) continue; var a = checkboxFilterMap[n]; if (!a.some(function (k) { return cVals[n].indexOf(v[k]) !== -1; })) return false; }
+    for (var m in mVals) { if (!mVals[m]) continue; var ma = mobileFilterMap[m]; if (!ma.some(function (k) { return mVals[m].indexOf(v[k]) !== -1; })) return false; }
+    return true;
+  }
+
+  function renderCards(vehicles) {
+    var html = '';
+    vehicles.forEach(function (v, i) {
+      var title = v.year + ' ' + v.make + ' ' + v.model;
+      var wheelSize = v['front-diameter'] + 'X' + v['front-width'] + ' ' + v['front-offset'] + 'MM';
+      var tireSize = v['front-tire-size'] + '/' + v['front-aspect-ratio'] + 'R' + v['front-diameter'];
+      var wheelName = [v['wheel-brand'], v['wheel-model']].filter(Boolean).join(' ');
+      var tireName = [v['tire-brand'], v['tire-model']].filter(Boolean).join(' ');
+      var href = v.url || '/vehicle-gallery/' + v.id + '/' + title.replace(/\s+/g, '-');
+      var image = v.image || 'https://placehold.co/400x300/1c1d21/ffffff?text=' + encodeURIComponent(title);
+      var loading = i < 3 ? 'eager' : 'lazy';
+      var priority = i < 3 ? 'high' : 'low';
+      html += '<a class="vehicle-card" href="' + href + '"><div class="vehicle-card__header"><span>' + title + '</span></div><div class="vehicle-card__image"><img src="' + image + '" alt="' + title + '" loading="' + loading + '" fetchpriority="' + priority + '" /></div><div class="vehicle-card__details"><p class="wheel-brand">' + wheelName + '</p><p class="wheel-size">' + wheelSize + '</p><p class="tire-brand">' + tireName + '</p><p class="tire-size">' + tireSize + '</p></div></a>';
+    });
+    grid.innerHTML = html;
+  }
+
+  // ── Get filtered dataset excluding one filter ──
+  function getFilteredExcluding(excludeType, excludeKey) {
+    var sVals = {}; for (var id in selectFilters) { var sel = document.getElementById(id); sVals[id] = sel ? sel.value : ''; }
+    var cVals = {}; for (var n in checkboxFilterMap) { cVals[n] = getCheckedValues(n); }
+    var mVals = {}; for (var m in mobileFilterMap) { mVals[m] = getCheckedValues(m); }
+    // Exclude the specified filter
+    if (excludeType === 'select') sVals[excludeKey] = '';
+    else if (excludeType === 'checkbox') cVals[excludeKey] = null;
+    else if (excludeType === 'mobile') mVals[excludeKey] = null;
+    return allVehicles.filter(function (v) { return vehicleMatches(v, sVals, cVals, mVals); });
+  }
+
+  // ── Collect unique values from a dataset for given fields ──
+  function uniqueValsFromSet(dataset, fields) {
+    var counts = {};
+    dataset.forEach(function (v) {
+      var seen = {};
+      fields.forEach(function (f) {
+        var val = v[f];
+        if (val && !seen[val]) { seen[val] = true; counts[val] = (counts[val] || 0) + 1; }
+      });
+    });
+    return counts;
+  }
+
+  // ── Update available options for all filters ──
+  function updateAvailableOptions() {
+    // Update select dropdowns (except make/model/year which use vehicleLookup cascade)
+    var nonCascadingSelects = {
+      'filter-diameter': 'front-diameter',
+      'filter-width': 'front-width',
+      'filter-offset': 'front-offset',
+      'filter-tire-width': 'front-tire-size',
+      'filter-tire-aspect': 'front-aspect-ratio',
+      'filter-tire-rim': 'rear-diameter',
+    };
+    var placeholders = {
+      'filter-diameter': 'Diameter', 'filter-width': 'Width', 'filter-offset': 'Offset',
+      'filter-tire-width': 'Width / Height', 'filter-tire-aspect': 'Aspect Ratio', 'filter-tire-rim': 'Rim Size',
+    };
+    for (var selId in nonCascadingSelects) {
+      var sel = document.getElementById(selId);
+      if (!sel) continue;
+      var field = nonCascadingSelects[selId];
+      var available = getFilteredExcluding('select', selId);
+      var vals = {}; available.forEach(function (v) { if (v[field]) vals[v[field]] = true; });
+      var sorted = Object.keys(vals).sort(function (a, b) { return Number(a) - Number(b) || a.localeCompare(b); });
+      populateSelect(sel, sorted, placeholders[selId] || '');
+    }
+
+    // Update make→model→year cascade based on filtered data
+    var makeFiltered = getFilteredExcluding('select', 'filter-make');
+    var availableMakes = {}; makeFiltered.forEach(function (v) { if (v.make) availableMakes[v.make] = true; });
+    var currentMake = makeSelect ? makeSelect.value : '';
+    if (makeSelect) populateSelect(makeSelect, Object.keys(availableMakes).sort(), 'Make');
+    if (currentMake && availableMakes[currentMake]) makeSelect.value = currentMake;
+
+    var modelFiltered = getFilteredExcluding('select', 'filter-model');
+    if (currentMake) modelFiltered = modelFiltered.filter(function (v) { return v.make === currentMake; });
+    var availableModels = {}; modelFiltered.forEach(function (v) { if (v.model) availableModels[v.model] = true; });
+    var currentModel = modelSelect ? modelSelect.value : '';
+    if (modelSelect) populateSelect(modelSelect, Object.keys(availableModels).sort(), 'Model');
+    if (currentModel && availableModels[currentModel]) modelSelect.value = currentModel;
+
+    var yearFiltered = getFilteredExcluding('select', 'filter-year');
+    if (currentMake) yearFiltered = yearFiltered.filter(function (v) { return v.make === currentMake; });
+    if (currentModel) yearFiltered = yearFiltered.filter(function (v) { return v.model === currentModel; });
+    var availableYears = {}; yearFiltered.forEach(function (v) { if (v.year) availableYears[v.year] = true; });
+    var currentYear = yearSelect ? yearSelect.value : '';
+    if (yearSelect) populateSelect(yearSelect, Object.keys(availableYears).sort(function (a, b) { return Number(b) - Number(a); }), 'Year');
+    if (currentYear && availableYears[currentYear]) yearSelect.value = currentYear;
+
+    // Update desktop checkbox filters
+    for (var cbName in checkboxFilterMap) {
+      var fields = checkboxFilterMap[cbName];
+      var cbFiltered = getFilteredExcluding('checkbox', cbName);
+      var available = uniqueValsFromSet(cbFiltered, fields);
+      var section = document.querySelector('[data-checkbox-filter="' + cbName.replace('desktop-', '') + '"]');
+      if (!section) continue;
+      section.querySelectorAll('.filter-checkbox-item').forEach(function (item) {
+        var label = item.querySelector('.filter-checkbox-item__label');
+        var countEl = item.querySelector('.filter-checkbox-item__count');
+        if (!label) return;
+        var val = label.textContent;
+        var count = available[val] || 0;
+        if (countEl) countEl.textContent = count;
+        item.classList.toggle('is-unavailable', count === 0);
+      });
+    }
+
+    // Update mobile checkbox filters
+    document.querySelectorAll('.mobile-filter-modal__group').forEach(function (group) {
+      var key = group.getAttribute('data-mobile-filter');
+      var mName = 'mobile-' + key;
+      var mFields = mobileFilterMap[mName];
+      if (!mFields) return;
+      var mFiltered = getFilteredExcluding('mobile', mName);
+      var available = uniqueValsFromSet(mFiltered, mFields);
+      group.querySelectorAll('.mobile-filter-modal__option').forEach(function (opt) {
+        var cb = opt.querySelector('input[type="checkbox"]');
+        if (!cb) return;
+        var count = available[cb.value] || 0;
+        opt.classList.toggle('is-unavailable', count === 0);
+      });
+    });
+  }
+
+  function applyFilters(resetPage) {
+    if (resetPage !== false) currentPage = 1;
+    var sVals = {}; for (var id in selectFilters) { var sel = document.getElementById(id); sVals[id] = sel ? sel.value : ''; }
+    var cVals = {}; for (var n in checkboxFilterMap) { cVals[n] = getCheckedValues(n); }
+    var mVals = {}; for (var m in mobileFilterMap) { mVals[m] = getCheckedValues(m); }
+    var filtered = allVehicles.filter(function (v) { return vehicleMatches(v, sVals, cVals, mVals); });
+    var total = filtered.length;
+    var totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+    if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+    var start = (currentPage - 1) * ITEMS_PER_PAGE;
+    renderCards(filtered.slice(start, start + ITEMS_PER_PAGE));
+    if (resultsCount) resultsCount.textContent = total;
+    if (mobileResultsCount) mobileResultsCount.textContent = total;
+    renderPagination(totalPages);
+    updateAvailableOptions();
+    saveFiltersToUrl();
+  }
+
+  function renderPagination(totalPages) {
+    if (!paginationNav) return;
+    if (totalPages <= 1) { paginationNav.innerHTML = ''; return; }
+    var max = 6, sp = Math.max(1, currentPage - Math.floor(max / 2)), ep = sp + max - 1;
+    if (ep > totalPages) { ep = totalPages; sp = Math.max(1, ep - max + 1); }
+    var h = '';
+    if (currentPage > 1) h += '<button class="gallery-pagination__btn" data-page="' + (currentPage - 1) + '">&lt;</button>';
+    for (var p = sp; p <= ep; p++) h += '<button class="gallery-pagination__page' + (p === currentPage ? ' is-active' : '') + '" data-page="' + p + '">' + p + '</button>';
+    if (currentPage < totalPages) h += '<button class="gallery-pagination__btn gallery-pagination__btn--next" data-page="' + (currentPage + 1) + '">NEXT &gt;</button>';
+    paginationNav.innerHTML = h;
+  }
+
+  if (paginationNav) {
+    paginationNav.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-page]'); if (!btn) return;
+      currentPage = Number(btn.getAttribute('data-page'));
+      applyFilters(false);
+      window.scrollTo({ top: grid.offsetTop - 100, behavior: 'smooth' });
+    });
+  }
+
+  // ── Bind desktop selects (skip make/model/year — handled by cascading logic) ──
+  var cascadingIds = ['filter-make', 'filter-model', 'filter-year'];
+  for (var selectId in selectFilters) {
+    if (cascadingIds.indexOf(selectId) !== -1) continue;
+    var sel = document.getElementById(selectId);
+    if (sel) sel.addEventListener('change', applyFilters);
+  }
+
+  // ── Bind desktop checkboxes ──
+  document.querySelectorAll('.filter-checkbox-section input[type="checkbox"]').forEach(function (cb) {
+    cb.addEventListener('change', applyFilters);
+  });
+
+  // ── Bind mobile checkboxes ──
+  document.querySelectorAll('.mobile-filter-modal__option input[type="checkbox"]').forEach(function (cb) {
+    cb.addEventListener('change', applyFilters);
+  });
+
+  // ── Desktop clear buttons ──
+  document.querySelectorAll('.btn-clear').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var group = btn.getAttribute('data-filter-group');
+      var groupMap = {
+        'vehicle': ['filter-make', 'filter-model', 'filter-year'],
+        'wheels': ['filter-diameter', 'filter-width', 'filter-offset'],
+        'tires': ['filter-tire-width', 'filter-tire-aspect', 'filter-tire-rim'],
+      };
+      var selects = groupMap[group] || [];
+      selects.forEach(function (id) {
+        var el = document.getElementById(id);
         if (el) el.selectedIndex = 0;
       });
+      if (group === 'vehicle') updateModelOptions();
+      applyFilters();
     });
   });
 
-  // Mobile filter modal
-  (function () {
-    var toggleBtn = document.getElementById('mobile-filter-toggle');
-    var overlay = document.getElementById('mobile-filter-overlay');
-    var doneBtn = document.getElementById('mobile-filter-done');
-    var clearBtn = document.getElementById('mobile-filter-clear');
+  // ── Mobile filter modal ──
+  var toggleBtn = document.getElementById('mobile-filter-toggle');
+  var overlay = document.getElementById('mobile-filter-overlay');
+  var doneBtn = document.getElementById('mobile-filter-done');
+  var clearBtn = document.getElementById('mobile-filter-clear');
 
-    if (!toggleBtn || !overlay) return;
-
+  if (toggleBtn && overlay) {
     function openModal() {
       overlay.classList.add('is-open');
       overlay.setAttribute('aria-hidden', 'false');
@@ -354,7 +779,7 @@ const mobileFilters = [
       if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
     });
 
-    // Accordion toggle for filter rows
+    // Mobile accordion toggle
     var filterList = document.querySelector('.mobile-filter-modal__list');
     if (filterList) {
       filterList.addEventListener('click', function (e) {
@@ -366,15 +791,53 @@ const mobileFilters = [
       });
     }
 
+    // Mobile clear all
     if (clearBtn) {
       clearBtn.addEventListener('click', function () {
-        // Clear desktop selects
-        var allSelects = document.querySelectorAll('.gallery-sidebar select');
-        allSelects.forEach(function (sel) { sel.selectedIndex = 0; });
-        // Clear mobile checkboxes
-        var allChecks = document.querySelectorAll('.mobile-filter-modal__option input[type="checkbox"]');
-        allChecks.forEach(function (cb) { cb.checked = false; });
+        document.querySelectorAll('.gallery-sidebar select').forEach(function (sel) { sel.selectedIndex = 0; });
+        document.querySelectorAll('.mobile-filter-modal__option input[type="checkbox"]').forEach(function (cb) { cb.checked = false; });
+        document.querySelectorAll('.filter-checkbox-section input[type="checkbox"]').forEach(function (cb) { cb.checked = false; });
+        updateModelOptions();
+        applyFilters();
       });
     }
-  })();
+  }
+
+  // ── Desktop checkbox accordion UI ──
+  document.querySelectorAll('.filter-checkbox-section').forEach(function (section) {
+    var header = section.querySelector('.filter-checkbox-section__header');
+    var searchInput = section.querySelector('.filter-checkbox-search');
+    var showMoreBtn = section.querySelector('.filter-checkbox-show-more');
+    var list = section.querySelector('.filter-checkbox-list');
+
+    if (header) {
+      header.addEventListener('click', function () {
+        section.classList.toggle('is-expanded');
+      });
+    }
+
+    if (searchInput && list) {
+      searchInput.addEventListener('input', function () {
+        var query = searchInput.value.toLowerCase();
+        list.querySelectorAll('.filter-checkbox-item').forEach(function (item) {
+          var label = item.querySelector('.filter-checkbox-item__label');
+          if (!label) return;
+          var match = label.textContent.toLowerCase().indexOf(query) !== -1;
+          item.classList.toggle('is-hidden-by-search', !match);
+        });
+      });
+    }
+
+    if (showMoreBtn && list) {
+      showMoreBtn.addEventListener('click', function () {
+        var isShowingAll = list.classList.toggle('show-all');
+        showMoreBtn.textContent = isShowingAll ? 'Show Less' : 'Show More';
+      });
+    }
+  });
+
+  // ── Restore filters from URL on page load ──
+  restoreFiltersFromUrl();
+  applyFilters(false);
+})();
 </script>
