@@ -61,9 +61,45 @@ const imageUrls = [1, 2, 3, 4, 5]
 const firstImageUrl = imageUrls[0];
 const imageNumbers = [1, 2, 3, 4, 5].filter((n) => vehicleData?.[`image-${n}`]);
 
-/** Used for `<Image width />` / `<Image height />` (remote images require both). Display size is still controlled in CSS. */
-const SLIDER_IMAGE_WIDTH = 1600;
-const SLIDER_IMAGE_HEIGHT = 1200;
+/**
+ * Mobile-first slider image presets.
+ * `sizes` maps to CSS layout (100vw on mobile, ~50vw desktop) and `widths` generates responsive srcset candidates.
+ */
+const SLIDER_IMAGE_SIZES = '(max-width: 551px) 100vw, (max-width: 900px) 92vw, 50vw';
+const LANDSCAPE_SLIDER_PRESET = {
+  width: 1600,
+  height: 1200,
+  widths: [400, 640, 800, 1000, 1200, 1600],
+};
+const PORTRAIT_SLIDER_PRESET = {
+  width: 1200,
+  height: 1600,
+  widths: [320, 480, 640, 800, 960, 1200],
+};
+
+const toPositiveNumber = (value: unknown) => {
+  const num = Number(value);
+  return Number.isFinite(num) && num > 0 ? num : null;
+};
+
+const getSliderPreset = (imageNumber: number) => {
+  const width = toPositiveNumber(
+    vehicleData?.[`image-${imageNumber}-width`]
+    ?? vehicleData?.[`image-${imageNumber}Width`]
+    ?? vehicleData?.[`image${imageNumber}Width`]
+  );
+  const height = toPositiveNumber(
+    vehicleData?.[`image-${imageNumber}-height`]
+    ?? vehicleData?.[`image-${imageNumber}Height`]
+    ?? vehicleData?.[`image${imageNumber}Height`]
+  );
+
+  if (width && height) {
+    return width >= height ? LANDSCAPE_SLIDER_PRESET : PORTRAIT_SLIDER_PRESET;
+  }
+
+  return LANDSCAPE_SLIDER_PRESET;
+};
 
 // Build tire size filter values (e.g. "275/35R20" format)
 const frontTireSize = vehicleData?.["front-tire-size"] && vehicleData?.["front-aspect-ratio"] && vehicleData?.["front-diameter"]
@@ -163,6 +199,7 @@ const schemaJsonLd = JSON.stringify({
 				{imageNumbers.map((number, i) => {
 					const rawUrl = vehicleData?.[`image-${number}`];
 					const url = typeof rawUrl === 'string' ? rawUrl : '';
+					const sliderPreset = getSliderPreset(number);
 					const alt = `${vehicle} - Image ${number}`;
 					if (!url) return null;
 					return (
@@ -170,10 +207,15 @@ const schemaJsonLd = JSON.stringify({
 							<Image
 								class="vehicle-slider__image"
 								src={url}
-								width={SLIDER_IMAGE_WIDTH}
-								height={SLIDER_IMAGE_HEIGHT}
+								width={sliderPreset.width}
+								height={sliderPreset.height}
+								layout="constrained"
+								widths={sliderPreset.widths}
+								sizes={SLIDER_IMAGE_SIZES}
 								alt={alt}
 								priority={i === 0}
+								loading={i === 0 ? 'eager' : 'lazy'}
+								quality="low"
 							/>
 						</div>
 					);
@@ -417,7 +459,7 @@ const schemaJsonLd = JSON.stringify({
 				<h3 class="explore-products__setup-title">Shop This Setup</h3>
 				<div class={`explore-products__images${!staggeredWheels && !staggeredTires ? ' explore-products__images--single' : ''}`}>
 				  <div class="explore-products__image-item" id="explore-front-wheel-card">
-					<Image src="/images/placeholder-wheel.jpg" width={150} height={150} alt="Front Wheel" />
+					<Image src="/images/placeholder-wheel.jpg" width={150} height={150} alt="Front Wheel" loading="lazy" quality="low" />
 					<div class="explore-products__product-info">
 					  <strong>{vehicleData?.["wheel-brand"]} {vehicleData?.["wheel-model"]}</strong>
 					  <span>{frontWheelSize} +{vehicleData?.["front-offset"]}</span>
@@ -425,7 +467,7 @@ const schemaJsonLd = JSON.stringify({
 				  </div>
 				  {staggeredWheels && (
 				    <div class="explore-products__image-item" id="explore-rear-wheel-card">
-					  <Image src="/images/placeholder-wheel.jpg" width={150} height={150} alt="Rear Wheel" />
+					  <Image src="/images/placeholder-wheel.jpg" width={150} height={150} alt="Rear Wheel" loading="lazy" quality="low" />
 					  <div class="explore-products__product-info">
 					    <strong>{vehicleData?.["wheel-brand"]} {vehicleData?.["wheel-model"]}</strong>
 					    <span>{rearWheelSize} +{vehicleData?.["rear-offset"]}</span>
@@ -434,7 +476,7 @@ const schemaJsonLd = JSON.stringify({
 				  )}
 				  <div class="explore-products__image-item" id="explore-front-tire-card">
 					<a id="explore-front-tire-link" href={frontTireSearchUrl || '#'} target="_blank" rel="noopener">
-					  <Image src="/images/placeholder-tire.jpg" width={150} height={150} alt="Front Tire" />
+					  <Image src="/images/placeholder-tire.jpg" width={150} height={150} alt="Front Tire" loading="lazy" quality="low" />
 					</a>
 					<div class="explore-products__product-info">
 					  <strong id="explore-front-tire-name">{frontTireSize}</strong>
@@ -444,7 +486,7 @@ const schemaJsonLd = JSON.stringify({
 				  {staggeredTires && (
 				    <div class="explore-products__image-item" id="explore-rear-tire-card">
 				      <a id="explore-rear-tire-link" href={rearTireSearchUrl || '#'} target="_blank" rel="noopener">
-					    <Image src="/images/placeholder-tire.jpg" width={150} height={150} alt="Rear Tire" />
+					    <Image src="/images/placeholder-tire.jpg" width={150} height={150} alt="Rear Tire" loading="lazy" quality="low" />
 					  </a>
 					  <div class="explore-products__product-info">
 					    <strong id="explore-rear-tire-name">{rearTireSize}</strong>
@@ -462,6 +504,8 @@ const schemaJsonLd = JSON.stringify({
 					width={380}
 					height={285}
 					alt="Suspension"
+					loading="lazy"
+					quality="low"
 				/>
 				<h3>Shop Suspension</h3>
 				<p class="explore-products__vehicle-name">{vehicleData?.year} {vehicleData?.make} {vehicleData?.model}</p>
