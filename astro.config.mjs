@@ -4,6 +4,7 @@ import vercel from "@astrojs/vercel";
 
 // https://astro.build/config
 export default defineConfig({
+  site: "https://gallery.threepiece.us",
   adapter: vercel({
     imageService: true,
   }),
@@ -11,5 +12,6 @@ export default defineConfig({
     // Allow Astro / Vercel to transform remote HTTPS images (gallery API, CDNs, tire product images).
     remotePatterns: [{ protocol: "https" }],
   },
+  compressHTML: false,
   output: "server",
 });
