@@ -4,6 +4,9 @@ import VehicleGalleryLayout from '../../../layouts/VehicleGalleryLayout.astro';
 import { getVehicleSlug } from '../../../lib/vehicle-slug';
 import '../vehicle-gallery.scss';
 
+const PLACEHOLDER_WHEEL_PATH = '/images/placeholder-wheel.jpg';
+const PLACEHOLDER_TIRE_PATH = '/images/placeholder-tire.jpg';
+
 const apiBaseUrl = 'https://threepieceus-api-h83mp.ondigitalocean.app';
 
 const fetchVehicleData = async (vehicleId: string | undefined) => {
@@ -456,7 +459,14 @@ const schemaJsonLd = JSON.stringify({
 		  </div>
 
 		  <!-- Explore Products Section -->
-		  <div class="explore-products" id="explore-products" data-front-tire-size={frontTireSize} data-rear-tire-size={rearTireSize}>
+		  <div
+			class="explore-products"
+			id="explore-products"
+			data-front-tire-size={frontTireSize}
+			data-rear-tire-size={rearTireSize}
+			data-placeholder-tire={PLACEHOLDER_TIRE_PATH}
+			data-placeholder-wheel={PLACEHOLDER_WHEEL_PATH}
+		  >
 			<div class="explore-products__header">
 			  <h2>Explore These Products</h2>
 			</div>
@@ -464,36 +474,50 @@ const schemaJsonLd = JSON.stringify({
 			  <div class="explore-products__card explore-products__card--package">
 				<h3 class="explore-products__setup-title">Shop This Setup</h3>
 				<div class={`explore-products__images${!staggeredWheels && !staggeredTires ? ' explore-products__images--single' : ''}`}>
+				  {frontWheelSize && (
 				  <div class="explore-products__image-item" id="explore-front-wheel-card">
-					<Image src="/images/placeholder-wheel.jpg" width={150} height={150} alt="Front Wheel" loading="lazy" />
+					<img
+					  id="explore-front-wheel-image"
+					  src={PLACEHOLDER_WHEEL_PATH}
+					  width={150}
+					  height={150}
+					  alt="Front Wheel"
+					  loading="lazy"
+					/>
 					<div class="explore-products__product-info">
 					  <strong>{vehicleData?.["wheel-brand"]} {vehicleData?.["wheel-model"]}</strong>
 					  <span>{frontWheelSize} +{vehicleData?.["front-offset"]}</span>
 					</div>
 				  </div>
+				  )}
 				  {staggeredWheels && (
 				    <div class="explore-products__image-item" id="explore-rear-wheel-card">
-					  <Image src="/images/placeholder-wheel.jpg" width={150} height={150} alt="Rear Wheel" loading="lazy" />
+					  <img
+					    id="explore-rear-wheel-image"
+					    src={PLACEHOLDER_WHEEL_PATH}
+					    width={150}
+					    height={150}
+					    alt="Rear Wheel"
+					    loading="lazy"
+					  />
 					  <div class="explore-products__product-info">
 					    <strong>{vehicleData?.["wheel-brand"]} {vehicleData?.["wheel-model"]}</strong>
 					    <span>{rearWheelSize} +{vehicleData?.["rear-offset"]}</span>
 					  </div>
 				    </div>
 				  )}
+				  {frontTireSize && (
 				  <div class="explore-products__image-item" id="explore-front-tire-card">
-					<a id="explore-front-tire-link" href={frontTireSearchUrl || '#'} target="_blank" rel="noopener">
-					  <Image src="/images/placeholder-tire.jpg" width={150} height={150} alt="Front Tire" loading="lazy" />
-					</a>
+					<a id="explore-front-tire-link" href={frontTireSearchUrl || '#'} target="_blank" rel="noopener"></a>
 					<div class="explore-products__product-info">
 					  <strong id="explore-front-tire-name">{frontTireSize}</strong>
 					  <span id="explore-front-tire-price" class="explore-products__price-amount"></span>
 					</div>
 				  </div>
+				  )}
 				  {staggeredTires && (
 				    <div class="explore-products__image-item" id="explore-rear-tire-card">
-				      <a id="explore-rear-tire-link" href={rearTireSearchUrl || '#'} target="_blank" rel="noopener">
-					    <Image src="/images/placeholder-tire.jpg" width={150} height={150} alt="Rear Tire" loading="lazy" />
-					  </a>
+				      <a id="explore-rear-tire-link" href={rearTireSearchUrl || '#'} target="_blank" rel="noopener"></a>
 					  <div class="explore-products__product-info">
 					    <strong id="explore-rear-tire-name">{rearTireSize}</strong>
 					    <span id="explore-rear-tire-price" class="explore-products__price-amount"></span>
@@ -754,6 +778,7 @@ const schemaJsonLd = JSON.stringify({
 
 		var frontSize = exploreEl.getAttribute('data-front-tire-size') || '';
 		var rearSize = exploreEl.getAttribute('data-rear-tire-size') || '';
+		var placeholderTire = exploreEl.getAttribute('data-placeholder-tire') || '/images/placeholder-tire.jpg';
 		if (!frontSize && !rearSize) return;
 
 		function getFirstNode(result) {
@@ -764,21 +789,34 @@ const schemaJsonLd = JSON.stringify({
 			return (edges && edges.length > 0) ? edges[0].node : null;
 		}
 
+		function setProductImage(container, imageUrl, placeholderSrc, alt) {
+			if (!container) return;
+			var src = imageUrl && String(imageUrl).trim() ? String(imageUrl).trim() : placeholderSrc;
+			var img = container.querySelector('img');
+			if (!img) {
+				img = document.createElement('img');
+				img.width = 150;
+				img.height = 150;
+				img.loading = 'lazy';
+				container.appendChild(img);
+			}
+			img.src = src;
+			img.alt = alt || '';
+		}
+
 		function renderTire(prefix, node) {
 			var link = document.getElementById('explore-' + prefix + '-tire-link');
-			var img = link ? link.querySelector('img') : null;
 			var name = document.getElementById('explore-' + prefix + '-tire-name');
 			var price = document.getElementById('explore-' + prefix + '-tire-price');
+			var imageUrl = node && node.defaultImage && node.defaultImage.urlOriginal;
+			var alt = (node && node.defaultImage && node.defaultImage.altText) || (node && node.name) || prefix + ' Tire';
 
-			if (img && node.defaultImage && node.defaultImage.urlOriginal) {
-				img.src = node.defaultImage.urlOriginal;
-				img.alt = node.defaultImage.altText || node.name || 'Tire';
-			}
-			if (link && node.path) {
+			setProductImage(link, imageUrl, placeholderTire, alt);
+			if (link && node && node.path) {
 				link.href = 'https://www.threepiece.us' + node.path;
 			}
-			if (name) name.textContent = node.name || '';
-			if (price && node.prices && node.prices.price) {
+			if (name && node) name.textContent = node.name || '';
+			if (price && node && node.prices && node.prices.price) {
 				price.textContent = node.prices.price.formatted;
 			}
 		}
@@ -791,10 +829,12 @@ const schemaJsonLd = JSON.stringify({
 			})
 				.then(function (response) { return response.json(); })
 				.then(function (result) {
-					var node = getFirstNode(result);
-					if (node) renderTire(prefix, node);
+					renderTire(prefix, getFirstNode(result));
 				})
-				.catch(function (error) { console.error(prefix + ' tire fetch error:', error); });
+				.catch(function (error) {
+					console.error(prefix + ' tire fetch error:', error);
+					renderTire(prefix, null);
+				});
 		}
 
 		// Always fetch front
