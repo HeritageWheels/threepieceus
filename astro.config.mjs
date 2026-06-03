@@ -10,7 +10,10 @@ export default defineConfig({
   }),
   image: {
     // Allow Astro / Vercel to transform remote HTTPS images (gallery API, CDNs, tire product images).
-    remotePatterns: [{ protocol: "https" }],
+    remotePatterns: [
+      { protocol: "https" },
+      { protocol: "http", hostname: "34.36.52.148" },
+    ],
   },
   compressHTML: false,
   output: "server",
