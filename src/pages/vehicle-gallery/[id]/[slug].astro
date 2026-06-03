@@ -53,10 +53,19 @@ const metaDescription = [
   .join(' ')
   .trim() + '. View fitment specs, wheel size, offset, and suspension details at Three Piece.';
 
+const GCS_IMAGE_BASE = 'https://storage.googleapis.com/fitment-gallery-images';
+const PROXY_IMAGE_BASE = 'http://34.36.52.148';
+
+const toImageUrl = (rawUrl: unknown): string => {
+  const url = typeof rawUrl === 'string' ? rawUrl : '';
+  if (!url.startsWith(GCS_IMAGE_BASE)) return url;
+  return `${PROXY_IMAGE_BASE}${url.slice(GCS_IMAGE_BASE.length)}`;
+};
+
 const baseUrl = 'https://threepiece.us';
 const pageUrl = `${baseUrl}/vehicle-gallery/${id}/${canonicalSlug}`;
 const imageUrls = [1, 2, 3, 4, 5]
-  .map((n) => vehicleData?.[`image-${n}`])
+  .map((n) => toImageUrl(vehicleData?.[`image-${n}`]))
   .filter(Boolean);
 const firstImageUrl = imageUrls[0];
 const imageNumbers = [1, 2, 3, 4, 5].filter((n) => vehicleData?.[`image-${n}`]);
@@ -196,7 +205,7 @@ const schemaJsonLd = JSON.stringify({
 			  <div class="vehicle-slider__track">
 				{imageNumbers.map((number, i) => {
 					const rawUrl = vehicleData?.[`image-${number}`];
-					const url = typeof rawUrl === 'string' ? rawUrl : '';
+					const url = toImageUrl(rawUrl);
 					const sliderPreset = getSliderPreset(number);
 					const alt = `${vehicle} - Image ${number}`;
 					if (!url) return null;
