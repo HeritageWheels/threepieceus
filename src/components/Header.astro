@@ -58,6 +58,7 @@ const navItems = await getNavItems(baseUrl);
         </div>
       ))}
     </nav>
+    </div>
   </div>
 
   <!-- Mobile: single bar with hamburger, logo, icons -->
@@ -218,6 +219,12 @@ const navItems = await getNavItems(baseUrl);
     transition: max-height 0.35s ease;
     background-color: #1C1D21;
   }
+
+  .site-header__nav-item:hover,
+  .site-header__nav-item:focus-within {
+    z-index: 110;
+  }
+
   .site-header.is-scrolled .site-header__nav-wrap {
     overflow: hidden;
   }
@@ -734,8 +741,8 @@ const navItems = await getNavItems(baseUrl);
   }
 </style>
 
-<script>
-  (function () {
+<script is:inline>
+  function initSiteHeader() {
     var header = document.querySelector('.site-header');
     var hamburger = document.getElementById('header-hamburger');
     var desktopHamburger = document.getElementById('header-desktop-hamburger');
@@ -765,7 +772,8 @@ const navItems = await getNavItems(baseUrl);
       header.classList.add('is-scrolled');
     }
 
-    if (header && desktopHamburger) {
+    if (header && desktopHamburger && !desktopHamburger.dataset.bound) {
+      desktopHamburger.dataset.bound = 'true';
       window.addEventListener('scroll', updateScrolled, { passive: true });
       updateScrolled();
       desktopHamburger.addEventListener('click', function () {
@@ -775,7 +783,8 @@ const navItems = await getNavItems(baseUrl);
       });
     }
 
-    if (!hamburger || !overlay || !closeBtn) return;
+    if (!hamburger || !overlay || !closeBtn || overlay.dataset.bound) return;
+    overlay.dataset.bound = 'true';
 
     function openMenu() {
       overlay.classList.add('is-open');
@@ -797,9 +806,9 @@ const navItems = await getNavItems(baseUrl);
       if (e.key === 'Escape') closeMenu();
     });
 
-    // Mobile panel: collapsible top-level and second-level categories
     var panel = document.getElementById('header-panel');
-    if (panel) {
+    if (panel && !panel.dataset.bound) {
+      panel.dataset.bound = 'true';
       panel.addEventListener('click', function (e) {
         var subBtn = e.target.closest('[data-panel-sub-toggle]');
         if (subBtn) {
@@ -831,5 +840,8 @@ const navItems = await getNavItems(baseUrl);
         }
       });
     }
-  })();
+  }
+
+  initSiteHeader();
+  document.addEventListener('astro:page-load', initSiteHeader);
 </script>

@@ -55,7 +55,7 @@ function fallbackNavItems(baseUrl: string): NavItem[] {
   }));
 }
 
-async function fetchAllCategories(): Promise<CategoryNode[]> {
+async function fetchCategories(query: URLSearchParams): Promise<CategoryNode[]> {
   const token = import.meta.env.BIGCOMMERCE_ACCESS_TOKEN;
   const storeHash = import.meta.env.BIGCOMMERCE_STORE_HASH;
   if (!token || !storeHash) return [];
@@ -64,13 +64,12 @@ async function fetchAllCategories(): Promise<CategoryNode[]> {
   let page = 1;
 
   while (page <= 10) {
-    const query = new URLSearchParams({
-      limit: '250',
-      is_visible: 'true',
-      page: String(page),
-    });
-    const url = `https://api.bigcommerce.com/stores/${storeHash}/v3/catalog/trees/categories?${query}`;
+    const params = new URLSearchParams(query);
+    params.set('is_visible', 'true');
+    params.set('limit', '250');
+    params.set('page', String(page));
 
+    const url = `https://api.bigcommerce.com/stores/${storeHash}/v3/catalog/trees/categories?${params}`;
     const res = await fetch(url, {
       headers: {
         Accept: 'application/json',
@@ -91,7 +90,7 @@ async function fetchAllCategories(): Promise<CategoryNode[]> {
   return all;
 }
 
-function buildNavItems(baseUrl: string, categories: CategoryNode[]): NavItem[] {
+function groupCategoriesByParent(categories: CategoryNode[]): Map<number, CategoryNode[]> {
   const childrenByParent = new Map<number, CategoryNode[]>();
 
   for (const category of categories) {
@@ -104,10 +103,16 @@ function buildNavItems(baseUrl: string, categories: CategoryNode[]): NavItem[] {
     }
   }
 
-  const rootCategories = childrenByParent.get(0) ?? [];
+  return childrenByParent;
+}
 
+function buildNavItems(
+  baseUrl: string,
+  rootParents: CategoryNode[],
+  childrenByParent: Map<number, CategoryNode[]>,
+): NavItem[] {
   return TOP_LEVEL_NAV.map((item) => {
-    const parent = rootCategories.find((p) => p.name && sameName(p.name, item.name));
+    const parent = rootParents.find((p) => p.name && sameName(p.name, item.name));
 
     if (!parent?.category_id) {
       return {
@@ -145,16 +150,22 @@ export async function getNavItems(baseUrl = 'https://threepiece.us'): Promise<Na
   }
 
   try {
-    const categories = await fetchAllCategories();
-    if (!categories.length) {
-      cachedNavItems = fallbackNavItems(baseUrl);
-    } else {
-      cachedNavItems = buildNavItems(baseUrl, categories);
-    }
-  } catch {
-    cachedNavItems = fallbackNavItems(baseUrl);
-  }
+    const [rootParents, allCategories] = await Promise.all([
+      fetchCategories(new URLSearchParams({ 'parent_id:in': '0' })),
+      fetchCategories(new URLSearchParams()),
+    ]);
 
-  cacheExpiresAt = now + CACHE_TTL_MS;
-  return cachedNavItems;
+    if (!rootParents.length && !allCategories.length) {
+      return fallbackNavItems(baseUrl);
+    }
+
+    const childrenByParent = groupCategoriesByParent(
+      allCategories.length ? allCategories : rootParents,
+    );
+    cachedNavItems = buildNavItems(baseUrl, rootParents, childrenByParent);
+    cacheExpiresAt = now + CACHE_TTL_MS;
+    return cachedNavItems;
+  } catch {
+    return fallbackNavItems(baseUrl);
+  }
 }
