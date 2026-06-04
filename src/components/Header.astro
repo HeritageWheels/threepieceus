@@ -4,118 +4,12 @@ interface Props {
   baseUrl?: string;
 }
 
+import { getNavItems } from '../lib/nav-items';
+
 const { baseUrl = 'https://threepiece.us' } = Astro.props;
 const logoUrl = 'https://cdn11.bigcommerce.com/s-8zxb6tk/images/stencil/200x90/threepiece-logo_1713917723__25054.original.png';
 
-/** Top-level nav: name (for display + API match) and path (used when category doesn't exist in API). */
-const TOP_LEVEL_NAV: { name: string; path: string }[] = [
-  { name: 'Shop', path: '/shop' },
-  { name: 'Brands', path: '/brands' },
-  { name: 'Heritage Wheel', path: '/heritage-wheel' },
-  { name: 'Threepieceus Gallery', path: '/vehicle-gallery' },
-  { name: 'Add Your Ride', path: '/add-vehicle' },
-  { name: 'Fitment Info', path: '/blog' },
-];
-
-interface CategoryNode {
-  category_id?: number;
-  name?: string;
-  url?: { path?: string };
-}
-
-interface NavChild {
-  name: string;
-  href: string;
-  category_id?: number;
-  children: { name: string; href: string }[];
-}
-
-interface NavItem {
-  name: string;
-  href: string;
-  children: NavChild[];
-}
-
-function toHref(path: string | undefined): string {
-  if (!path) return baseUrl;
-  return path.startsWith('http') ? path : `${baseUrl}${path.replace(/^\/?/, '/')}`;
-}
-
-function parseCategoryList(json: unknown): CategoryNode[] {
-  const data = (json as { data?: unknown })?.data ?? json;
-  if (Array.isArray(data)) return data as CategoryNode[];
-  const cats = (data as { categories?: CategoryNode[] })?.categories;
-  return Array.isArray(cats) ? cats : [];
-}
-
-function sameName(a: string, b: string): boolean {
-  return a.trim().toLowerCase() === b.trim().toLowerCase();
-}
-
-const apiBase = new URL('/api/categories', Astro.url.origin).href;
-
-let navItems: NavItem[] = [];
-try {
-  const parentsRes = await fetch(apiBase);
-  if (!parentsRes.ok) throw new Error();
-  const parentsList = parseCategoryList(await parentsRes.json());
-  const apiParents = parentsList.filter((n) => n.name);
-
-  for (const item of TOP_LEVEL_NAV) {
-    const parent = apiParents.find((p) => sameName(p.name!, item.name));
-
-    if (parent) {
-      const id = parent.category_id;
-      const children: NavChild[] = [];
-      if (id != null) {
-        try {
-          const childRes = await fetch(`${apiBase}?parent_id:in=${id}`);
-          if (childRes.ok) {
-            const childList = parseCategoryList(await childRes.json());
-            for (const node of childList.filter((n) => n.name)) {
-              const childId = node.category_id;
-              const subChildren: { name: string; href: string }[] = [];
-              if (childId != null) {
-                try {
-                  const subRes = await fetch(`${apiBase}?parent_id:in=${childId}`);
-                  if (subRes.ok) {
-                    const subList = parseCategoryList(await subRes.json());
-                    subList.filter((n) => n.name).forEach((sub) => {
-                      subChildren.push({ name: sub.name!, href: toHref(sub.url?.path) });
-                    });
-                  }
-                } catch (_) {}
-              }
-              children.push({
-                name: node.name!,
-                href: toHref(node.url?.path),
-                category_id: childId,
-                children: subChildren,
-              });
-            }
-          }
-        } catch (_) {}
-      }
-      navItems.push({
-        name: item.name,
-        href: toHref(parent.url?.path),
-        children,
-      });
-    } else {
-      navItems.push({
-        name: item.name,
-        href: `${baseUrl}${item.path.replace(/^\/?/, '/')}`,
-        children: [],
-      });
-    }
-  }
-} catch (_) {
-  navItems = TOP_LEVEL_NAV.map((item) => ({
-    name: item.name,
-    href: `${baseUrl}${item.path.replace(/^\/?/, '/')}`,
-    children: [] as NavChild[],
-  }));
-}
+const navItems = await getNavItems(baseUrl);
 ---
 
 <header class="site-header">
@@ -840,7 +734,7 @@ try {
   }
 </style>
 
-<script is:inline>
+<script>
   (function () {
     var header = document.querySelector('.site-header');
     var hamburger = document.getElementById('header-hamburger');
