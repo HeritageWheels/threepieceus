@@ -7,7 +7,7 @@ export default defineConfig({
   site: "https://gallery.threepiece.us",
   adapter: vercel({
     imageService: true,
-    // isr: true,
+    isr: true,
   }),
   image: {
     // Allow Astro / Vercel to transform remote HTTPS images (gallery API, CDNs, tire product images).
