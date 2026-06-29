@@ -1,0 +1,27 @@
+---
+import VehicleGalleryLayout from '../layouts/VehicleGalleryLayout.astro';
+import './404.scss';
+
+Astro.response.status = 404;
+---
+
+<VehicleGalleryLayout
+  pageTitle="Page Not Found | Threepiece.us"
+  metaDescription="The page you are looking for could not be found."
+>
+  <div id="not-found-page">
+    <div class="not-found-container">
+      <p class="not-found-code">404</p>
+      <h1 class="not-found-title">Page not found</h1>
+      <p class="not-found-text">
+        The page you are looking for does not exist or may have been moved.
+      </p>
+      <div class="not-found-actions">
+        <a class="not-found-link" href="/">Back to gallery</a>
+        <a class="not-found-link not-found-link--secondary" href="https://threepiece.us">
+          Go to threepiece.us
+        </a>
+      </div>
+    </div>
+  </div>
+</VehicleGalleryLayout>

@@ -1,0 +1,71 @@
+$color-text: #111;
+$color-muted: #666;
+$color-blue: #0066cc;
+
+#not-found-page {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: $color-text;
+
+  .not-found-container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 8rem 1.5rem 9rem;
+    text-align: center;
+  }
+
+  .not-found-code {
+    margin: 0 0 0.75rem;
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: #ddd;
+  }
+
+  .not-found-title {
+    margin: 0 0 1rem;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .not-found-text {
+    margin: 0 0 2rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: $color-muted;
+  }
+
+  .not-found-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .not-found-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid $color-blue;
+    background: $color-blue;
+    color: #fff;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.85;
+    }
+
+    &--secondary {
+      background: #fff;
+      color: $color-blue;
+    }
+  }
+}
