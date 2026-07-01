@@ -1,0 +1,779 @@
+---
+import VehicleGalleryLayout from '../../layouts/VehicleGalleryLayout.astro';
+import {
+  buildCollectionPageUrl,
+  COLLECTION_FACET_VISIBLE_LIMIT,
+  COLLECTION_SORT_OPTIONS,
+  getCollectionPaginationBaseUrl,
+  getCollectionProducts,
+  parseCollectionFilterIds,
+  parseCollectionSort,
+  parseCollectionStockFilter,
+} from '../../lib/collection-products';
+import { supportsWheelFilters } from '../../lib/category-routes';
+import {
+  getWheelFilterState,
+  hasWheelFilterSelections,
+  parseWheelFilterSelections,
+  WHEEL_FILTER_FIELDS,
+} from '../../lib/wheel-filters';
+import './collections.scss';
+
+const storeBaseUrl = 'https://threepiece.us';
+const { searchParams } = Astro.url;
+
+const categoryId = Number(searchParams.get('categoryId') || '');
+const fallbackCategoryName = searchParams.get('name')?.trim() || 'Collection';
+const parentName = searchParams.get('parentName')?.trim();
+const parentPath = searchParams.get('parentPath')?.trim();
+const hasCategory = Number.isFinite(categoryId) && categoryId > 0;
+const parentHref =
+  parentName && parentPath
+    ? parentPath.startsWith('http')
+      ? parentPath
+      : `${storeBaseUrl}${parentPath.replace(/^\/?/, '/')}`
+    : null;
+
+const sortBy = parseCollectionSort(searchParams.get('sort'));
+const selectedCategoryIds = parseCollectionFilterIds(searchParams.get('categories'));
+const selectedBrandIds = parseCollectionFilterIds(searchParams.get('brands'));
+const selectedStock = parseCollectionStockFilter(searchParams.get('stock'));
+const selectedWheelFilters = parseWheelFilterSelections(searchParams);
+const showWheelFilters = hasCategory && supportsWheelFilters(categoryId);
+const activeWheelFilters = showWheelFilters ? selectedWheelFilters : {};
+const after = searchParams.get('after');
+const before = searchParams.get('before');
+const isFirstPage = !after && !before;
+
+const wheelFilterContext = showWheelFilters
+  ? {
+      categoryId,
+      categoryEntityIds: selectedCategoryIds,
+      brandEntityIds: selectedBrandIds,
+      hideOutOfStock: selectedStock !== 'out',
+    }
+  : null;
+
+const wheelFilterState =
+  showWheelFilters && wheelFilterContext
+    ? await getWheelFilterState(wheelFilterContext, activeWheelFilters)
+    : { showSection: false, fields: [] };
+
+const collectionResult = hasCategory
+  ? await getCollectionProducts(
+      categoryId,
+      storeBaseUrl,
+      sortBy,
+      true,
+      { after, before },
+      {
+        categoryEntityIds: selectedCategoryIds,
+        brandEntityIds: selectedBrandIds,
+        stock: selectedStock,
+        wheelFilters: activeWheelFilters,
+      },
+    )
+  : null;
+
+const products = collectionResult?.products ?? [];
+const totalItems = collectionResult?.totalItems ?? 0;
+const pageInfo = collectionResult?.pageInfo;
+const categoryInfo = collectionResult?.category;
+const facets = collectionResult?.facets ?? { categories: [], brands: [], stock: [] };
+
+const facetSections = [
+  { key: 'categories', label: 'Category', param: 'categories', options: facets.categories },
+  { key: 'brands', label: 'Brand', param: 'brands', options: facets.brands },
+  { key: 'stock', label: 'Stock', param: 'stock', options: facets.stock },
+];
+
+const displayName = categoryInfo?.name || fallbackCategoryName;
+const categoryDescription = categoryInfo?.description ?? '';
+const pageTitle = categoryInfo?.pageTitle || `${displayName} | Threepiece.us`;
+const metaDescription =
+  categoryInfo?.metaDescription || `Shop ${displayName} at Threepiece.us.`;
+
+const paginationBaseUrl = hasCategory
+  ? getCollectionPaginationBaseUrl(Astro.url, categoryId)
+  : new URL(Astro.url);
+
+const prevPageUrl =
+  pageInfo?.hasPreviousPage && pageInfo.startCursor
+    ? buildCollectionPageUrl(paginationBaseUrl, {
+        before: pageInfo.startCursor,
+        after: null,
+      })
+    : !isFirstPage
+      ? buildCollectionPageUrl(paginationBaseUrl, { after: null, before: null })
+      : null;
+
+const nextPageUrl =
+  pageInfo?.hasNextPage && pageInfo.endCursor
+    ? buildCollectionPageUrl(paginationBaseUrl, {
+        after: pageInfo.endCursor,
+        before: null,
+      })
+    : null;
+
+const mobileProductFilters = [
+  { key: 'diameter', label: 'Diameter', placeholder: 'Diameter' },
+];
+
+const wheelFilterParamNames = showWheelFilters
+  ? WHEEL_FILTER_FIELDS.map((field) => field.urlParam)
+  : [];
+---
+
+<VehicleGalleryLayout pageTitle={pageTitle} metaDescription={metaDescription}>
+  <div
+    id="collection-page"
+    data-category-id={hasCategory ? categoryId : ''}
+    data-category-name={displayName}
+  >
+    <div class="collection-container">
+      <nav class="collection-breadcrumbs" aria-label="Breadcrumb">
+        <a href={storeBaseUrl}>Home</a>
+        {parentHref && parentName && (
+          <>
+            <span class="collection-breadcrumbs__sep" aria-hidden="true">/</span>
+            <a href={parentHref}>{parentName}</a>
+          </>
+        )}
+        <span class="collection-breadcrumbs__sep" aria-hidden="true">/</span>
+        <span class="collection-breadcrumbs__current">{displayName}</span>
+      </nav>
+
+      <header class="collection-header">
+        <h1 class="collection-title">{displayName}</h1>
+        {categoryDescription && (
+          <div class="collection-intro" set:html={categoryDescription} />
+        )}
+      </header>
+
+      <div class="collection-mobile-filter-overlay" id="collection-mobile-filter-overlay" aria-hidden="true">
+        <div class="collection-mobile-filter-modal">
+          <div class="collection-mobile-filter-modal__header">
+            <div class="collection-mobile-filter-modal__title-group">
+              <h2 class="collection-mobile-filter-modal__title">Filters</h2>
+              <span class="collection-mobile-filter-modal__count">
+                <span id="collection-mobile-results-count">{totalItems.toLocaleString('en-US')}</span> Results
+              </span>
+            </div>
+            <div class="collection-mobile-filter-modal__actions">
+              <button
+                type="button"
+                class="collection-mobile-filter-modal__btn collection-mobile-filter-modal__btn--clear"
+                id="collection-mobile-filter-clear"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                class="collection-mobile-filter-modal__btn collection-mobile-filter-modal__btn--done"
+                id="collection-mobile-filter-done"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+          <div class="collection-mobile-filter-modal__divider"></div>
+          <div class="collection-mobile-filter-modal__list">
+            {mobileProductFilters.map((filter) => (
+              <div class="collection-mobile-filter-modal__group" data-mobile-filter={filter.key}>
+                <button class="collection-mobile-filter-modal__row" type="button">
+                  <span>{filter.label}</span>
+                  <span class="collection-mobile-filter-modal__chevron" aria-hidden="true">&#x2039;</span>
+                </button>
+                <div class="collection-mobile-filter-modal__options">
+                  <label class="collection-mobile-filter-modal__field">
+                    <span class="visually-hidden">{filter.label}</span>
+                    <select class="collection-mobile-filter-modal__select" disabled aria-label={filter.label}>
+                      <option value="">{filter.placeholder}</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="collection-vehicle-overlay"
+        id="collection-vehicle-overlay"
+        aria-hidden="true"
+      >
+        <div
+          class="collection-vehicle-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="collection-vehicle-title"
+        >
+          <button
+            type="button"
+            class="collection-vehicle-modal__close"
+            id="collection-vehicle-close"
+            aria-label="Close vehicle selector"
+          >
+            &times;
+          </button>
+          <h2 class="collection-vehicle-modal__title" id="collection-vehicle-title">
+            Select Your Vehicle
+          </h2>
+          <div class="collection-vehicle-modal__fields">
+            <label class="collection-vehicle-modal__field">
+              <span class="visually-hidden">Year</span>
+              <select class="collection-vehicle-modal__select" disabled aria-label="Year">
+                <option value="">Year</option>
+              </select>
+            </label>
+            <label class="collection-vehicle-modal__field">
+              <span class="visually-hidden">Make</span>
+              <select class="collection-vehicle-modal__select" disabled aria-label="Make">
+                <option value="">Make</option>
+              </select>
+            </label>
+            <label class="collection-vehicle-modal__field">
+              <span class="visually-hidden">Model</span>
+              <select class="collection-vehicle-modal__select" disabled aria-label="Model">
+                <option value="">Model</option>
+              </select>
+            </label>
+            <label class="collection-vehicle-modal__field">
+              <span class="visually-hidden">Submodel</span>
+              <select class="collection-vehicle-modal__select" disabled aria-label="Submodel">
+                <option value="">Submodel</option>
+              </select>
+            </label>
+          </div>
+          <div class="collection-vehicle-modal__actions">
+            <button
+              type="button"
+              class="collection-vehicle-modal__btn collection-vehicle-modal__btn--go"
+              disabled
+            >
+              Go
+            </button>
+            <button
+              type="button"
+              class="collection-vehicle-modal__btn collection-vehicle-modal__btn--clear"
+              disabled
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="collection-layout">
+        <aside class="collection-filters" aria-label="Filters">
+          <div class="collection-sidebar">
+            <div class="collection-sidebar__vehicle">
+              <h2 class="collection-sidebar__heading">Select Your Vehicle</h2>
+              <label class="collection-filter-field">
+                <span class="visually-hidden">Year</span>
+                <select class="collection-filter-field__select" disabled aria-label="Year">
+                  <option value="">Year</option>
+                </select>
+              </label>
+              <label class="collection-filter-field">
+                <span class="visually-hidden">Make</span>
+                <select class="collection-filter-field__select" disabled aria-label="Make">
+                  <option value="">Make</option>
+                </select>
+              </label>
+              <label class="collection-filter-field">
+                <span class="visually-hidden">Model</span>
+                <select class="collection-filter-field__select" disabled aria-label="Model">
+                  <option value="">Model</option>
+                </select>
+              </label>
+              <label class="collection-filter-field">
+                <span class="visually-hidden">Submodel</span>
+                <select class="collection-filter-field__select" disabled aria-label="Submodel">
+                  <option value="">Submodel</option>
+                </select>
+              </label>
+              <div class="collection-filter-group__actions">
+                <button type="button" class="collection-filter-btn collection-filter-btn--go" disabled>
+                  Go
+                </button>
+                <button type="button" class="collection-filter-btn collection-filter-btn--clear" disabled>
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            {showWheelFilters && wheelFilterState.showSection && (
+              <details class="collection-sidebar__facet" open>
+                <summary class="collection-sidebar__facet-toggle">
+                  <span class="collection-sidebar__facet-title">Shop Wheels</span>
+                  <span class="collection-sidebar__chevron" aria-hidden="true">
+                    <svg class="collection-sidebar__chevron-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M3 5.5 7 9.5 11 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                </summary>
+                <div class="collection-sidebar__facet-panel">
+                  {wheelFilterState.fields.map((field) => (
+                    <label class="collection-filter-field">
+                      <span class="visually-hidden">{field.label}</span>
+                      <select
+                        class="collection-filter-field__select"
+                        data-wheel-filter={field.urlParam}
+                        disabled={field.disabled}
+                        aria-label={field.label}
+                      >
+                        <option value="">{field.label}</option>
+                        {field.options.map((option) => (
+                          <option value={option.value} selected={option.value === field.selected}>
+                            {option.value}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ))}
+                  {hasWheelFilterSelections(activeWheelFilters) && (
+                    <div class="collection-filter-group__actions collection-filter-group__actions--single">
+                      <button
+                        type="button"
+                        class="collection-filter-btn collection-filter-btn--clear"
+                        data-wheel-filter-clear
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </details>
+            )}
+
+            {facetSections.map((section) => (
+              <details class="collection-sidebar__facet" open data-facet={section.key}>
+                <summary class="collection-sidebar__facet-toggle">
+                  <span class="collection-sidebar__facet-title">{section.label}</span>
+                  <span class="collection-sidebar__chevron" aria-hidden="true">
+                    <svg class="collection-sidebar__chevron-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M3 5.5 7 9.5 11 5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </span>
+                </summary>
+                <div class="collection-sidebar__facet-panel">
+                  <div class="collection-facet__scroll-area">
+                    <div class="collection-facet__list-wrap">
+                      <ul class="collection-facet__list">
+                        {section.options.length === 0 && (
+                          <li class="collection-facet__empty">
+                            No {section.label.toLowerCase()} filters available.
+                          </li>
+                        )}
+                        {section.options.map((option) => (
+                          <li class="collection-facet__item">
+                            <label class="collection-facet__option">
+                              <input
+                                type={section.key === 'stock' ? 'radio' : 'checkbox'}
+                                name={section.key === 'stock' ? 'stock' : section.param}
+                                value={option.value ?? String(option.entityId)}
+                                checked={option.isSelected}
+                                data-collection-facet={section.param}
+                              />
+                              <span class="collection-facet__label">{option.name}</span>
+                              <span class="collection-facet__count">
+                                {option.productCount.toLocaleString('en-US')}
+                              </span>
+                            </label>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    {section.options.length > COLLECTION_FACET_VISIBLE_LIMIT && (
+                      <div class="collection-facet__scrollbar" aria-hidden="true">
+                        <div class="collection-facet__scrollbar-thumb"></div>
+                      </div>
+                    )}
+                  </div>
+                  {section.options.length > COLLECTION_FACET_VISIBLE_LIMIT && (
+                    <button
+                      type="button"
+                      class="collection-facet__show-more"
+                      data-facet-show-more={section.key}
+                    >
+                      Show More
+                    </button>
+                  )}
+                </div>
+              </details>
+            ))}
+          </div>
+        </aside>
+
+        <div class="collection-main">
+          {hasCategory && (
+            <>
+              <div class="collection-toolbar collection-toolbar--desktop">
+                <p class="collection-toolbar__count">
+                  {totalItems.toLocaleString('en-US')} results
+                </p>
+                <div class="collection-toolbar__sort">
+                  <label class="collection-toolbar__sort-label" for="collection-sort">
+                    Sort By
+                  </label>
+                  <select
+                    id="collection-sort"
+                    class="collection-toolbar__sort-select collection-sort-select"
+                    value={sortBy}
+                  >
+                    {COLLECTION_SORT_OPTIONS.map((option) => (
+                      <option value={option.value} selected={option.value === sortBy}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div class="collection-mobile-controls">
+                <select
+                  id="collection-sort-mobile"
+                  class="collection-mobile-controls__sort collection-sort-select"
+                  aria-label="Sort products"
+                  value={sortBy}
+                >
+                  {COLLECTION_SORT_OPTIONS.map((option) => (
+                    <option value={option.value} selected={option.value === sortBy}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  class="collection-mobile-controls__vehicle"
+                  id="collection-vehicle-info-btn"
+                >
+                  Vehicle Info
+                </button>
+                <button
+                  type="button"
+                  class="collection-mobile-controls__filters"
+                  id="collection-mobile-filter-toggle"
+                >
+                  <span>Filters</span>
+                  <svg
+                    class="collection-mobile-controls__filter-icon"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M3 4h18l-7 8.2V19l-4 2v-8.8L3 4zm2.2 2 5.3 6.1h4l5.3-6.1H5.2z"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </>
+          )}
+
+          <section class="collection-products" aria-label="Products">
+            {!hasCategory && (
+              <div class="collection-empty">
+                <p class="collection-empty__title">Category not found</p>
+                <p class="collection-empty__text">
+                  Add a categoryId query param or map a friendly URL in vercel.json.
+                </p>
+              </div>
+            )}
+
+            {hasCategory && products.length === 0 && (
+              <div class="collection-empty">
+                <p class="collection-empty__title">No products found</p>
+                <p class="collection-empty__text">This category does not have any products yet.</p>
+              </div>
+            )}
+
+            {products.length > 0 && (
+              <>
+                <ul class="collection-grid">
+                  {products.map((product) => (
+                    <li class="collection-card">
+                      <a href={product.href} class="collection-card__link">
+                        <div class="collection-card__image-wrap">
+                          {product.imageUrl ? (
+                            <img
+                              src={product.imageUrl}
+                              alt={product.imageAlt}
+                              class="collection-card__image"
+                              loading="lazy"
+                              width="400"
+                              height="400"
+                            />
+                          ) : (
+                            <div class="collection-card__image-placeholder" aria-hidden="true" />
+                          )}
+                        </div>
+                        <div class="collection-card__body">
+                          <h2 class="collection-card__name">{product.name}</h2>
+                          {product.priceFormatted && (
+                            <p class="collection-card__price">{product.priceFormatted}</p>
+                          )}
+                        </div>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+
+                {(prevPageUrl || nextPageUrl) && (
+                  <nav class="collection-pagination" aria-label="Product pagination">
+                    {prevPageUrl ? (
+                      <a href={prevPageUrl} class="collection-pagination__nav">
+                        <span class="collection-pagination__chevron" aria-hidden="true">‹</span> PREV
+                      </a>
+                    ) : (
+                      <span class="collection-pagination__nav collection-pagination__nav--disabled">
+                        <span class="collection-pagination__chevron" aria-hidden="true">‹</span> PREV
+                      </span>
+                    )}
+
+                    {nextPageUrl ? (
+                      <a href={nextPageUrl} class="collection-pagination__nav">
+                        NEXT <span class="collection-pagination__chevron" aria-hidden="true">›</span>
+                      </a>
+                    ) : (
+                      <span class="collection-pagination__nav collection-pagination__nav--disabled">
+                        NEXT <span class="collection-pagination__chevron" aria-hidden="true">›</span>
+                      </span>
+                    )}
+                  </nav>
+                )}
+              </>
+            )}
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ sortBaseUrl: paginationBaseUrl.pathname + paginationBaseUrl.search, wheelFilterParams: wheelFilterParamNames }}>
+    function navigateWithSort(sortValue) {
+      const url = new URL(sortBaseUrl || window.location.pathname, window.location.origin);
+      url.searchParams.set('sort', sortValue);
+      url.searchParams.delete('after');
+      url.searchParams.delete('before');
+      url.searchParams.delete('page');
+      window.location.href = url.pathname + url.search;
+    }
+
+    document.querySelectorAll('.collection-sort-select').forEach((sortSelect) => {
+      sortSelect.addEventListener('change', () => {
+        navigateWithSort(sortSelect.value);
+      });
+    });
+
+    function getCheckedFacetValues(paramName) {
+      return [...document.querySelectorAll(`[data-collection-facet="${paramName}"]:checked`)]
+        .map((input) => input.value)
+        .filter(Boolean);
+    }
+
+    function navigateWithFacets() {
+      const url = new URL(sortBaseUrl || window.location.pathname, window.location.origin);
+
+      const categories = getCheckedFacetValues('categories');
+      const brands = getCheckedFacetValues('brands');
+      const stock =
+        document.querySelector('[data-collection-facet="stock"]:checked')?.value ?? 'in';
+
+      if (categories.length) {
+        url.searchParams.set('categories', categories.join(','));
+      } else {
+        url.searchParams.delete('categories');
+      }
+
+      if (brands.length) {
+        url.searchParams.set('brands', brands.join(','));
+      } else {
+        url.searchParams.delete('brands');
+      }
+
+      if (stock === 'out') {
+        url.searchParams.set('stock', 'out');
+      } else {
+        url.searchParams.delete('stock');
+      }
+
+      url.searchParams.delete('after');
+      url.searchParams.delete('before');
+      url.searchParams.delete('page');
+      window.location.href = url.pathname + url.search;
+    }
+
+    document.querySelectorAll('[data-collection-facet]').forEach((input) => {
+      input.addEventListener('change', navigateWithFacets);
+    });
+
+    function clearDownstreamWheelParams(url, changedParam) {
+      const changedIndex = wheelFilterParams.indexOf(changedParam);
+      if (changedIndex === -1) return;
+
+      for (const param of wheelFilterParams.slice(changedIndex + 1)) {
+        url.searchParams.delete(param);
+      }
+    }
+
+    function navigateWithWheelFilters(changedParam) {
+      const url = new URL(sortBaseUrl || window.location.pathname, window.location.origin);
+      clearDownstreamWheelParams(url, changedParam);
+
+      for (const param of wheelFilterParams) {
+        const select = document.querySelector(`[data-wheel-filter="${param}"]`);
+        const value = select?.value?.trim();
+        if (value) url.searchParams.set(param, value);
+        else url.searchParams.delete(param);
+      }
+
+      url.searchParams.delete('after');
+      url.searchParams.delete('before');
+      url.searchParams.delete('page');
+      window.location.href = url.pathname + url.search;
+    }
+
+    document.querySelectorAll('[data-wheel-filter]').forEach((select) => {
+      select.addEventListener('change', () => {
+        navigateWithWheelFilters(select.getAttribute('data-wheel-filter'));
+      });
+    });
+
+    document.querySelectorAll('[data-wheel-filter-clear]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const url = new URL(sortBaseUrl || window.location.pathname, window.location.origin);
+        for (const param of wheelFilterParams) {
+          url.searchParams.delete(param);
+        }
+        url.searchParams.delete('after');
+        url.searchParams.delete('before');
+        url.searchParams.delete('page');
+        window.location.href = url.pathname + url.search;
+      });
+    });
+
+    document.querySelectorAll('[data-facet-show-more]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const facetKey = button.getAttribute('data-facet-show-more');
+        const facet = document.querySelector(`[data-facet="${facetKey}"]`);
+        if (!facet) return;
+
+        const listWrap = facet.querySelector('.collection-facet__list-wrap');
+        const isExpanded = listWrap?.classList.toggle('is-expanded');
+        button.textContent = isExpanded ? 'Show Less' : 'Show More';
+        if (listWrap) {
+          requestAnimationFrame(() => updateFacetScrollbar(listWrap));
+        }
+      });
+    });
+
+    function updateFacetScrollbar(listWrap) {
+      const scrollArea = listWrap.closest('.collection-facet__scroll-area');
+      const scrollTrack = scrollArea?.querySelector('.collection-facet__scrollbar');
+      const thumb = scrollArea?.querySelector('.collection-facet__scrollbar-thumb');
+      if (!scrollTrack || !thumb) return;
+
+      if (!listWrap.classList.contains('is-expanded')) {
+        scrollTrack.classList.remove('is-visible');
+        return;
+      }
+
+      const { scrollHeight, clientHeight, scrollTop } = listWrap;
+      if (scrollHeight <= clientHeight) {
+        scrollTrack.classList.remove('is-visible');
+        return;
+      }
+
+      scrollTrack.classList.add('is-visible');
+      const trackHeight = clientHeight;
+      const thumbHeight = Math.max((clientHeight / scrollHeight) * trackHeight, 36);
+      const maxScrollTop = scrollHeight - clientHeight;
+      const maxThumbTop = trackHeight - thumbHeight;
+      const thumbTop = maxScrollTop > 0 ? (scrollTop / maxScrollTop) * maxThumbTop : 0;
+
+      thumb.style.height = `${thumbHeight}px`;
+      thumb.style.transform = `translateY(${thumbTop}px)`;
+    }
+
+    document.querySelectorAll('.collection-facet__list-wrap').forEach((listWrap) => {
+      listWrap.addEventListener('scroll', () => updateFacetScrollbar(listWrap));
+      updateFacetScrollbar(listWrap);
+    });
+
+    window.addEventListener('resize', () => {
+      document.querySelectorAll('.collection-facet__list-wrap').forEach(updateFacetScrollbar);
+    });
+
+    const toggleBtn = document.getElementById('collection-mobile-filter-toggle');
+    const filterOverlay = document.getElementById('collection-mobile-filter-overlay');
+    const clearBtn = document.getElementById('collection-mobile-filter-clear');
+    const vehicleBtn = document.getElementById('collection-vehicle-info-btn');
+    const vehicleOverlay = document.getElementById('collection-vehicle-overlay');
+    const vehicleCloseBtn = document.getElementById('collection-vehicle-close');
+
+    function openOverlay(overlay) {
+      if (!overlay) return;
+      overlay.classList.add('is-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeOverlay(overlay) {
+      if (!overlay) return;
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    if (toggleBtn && filterOverlay) {
+      const filterDoneBtn = document.getElementById('collection-mobile-filter-done');
+
+      toggleBtn.addEventListener('click', () => openOverlay(filterOverlay));
+      if (filterDoneBtn) filterDoneBtn.addEventListener('click', () => closeOverlay(filterOverlay));
+
+      filterOverlay.addEventListener('click', (event) => {
+        if (event.target === filterOverlay) closeOverlay(filterOverlay);
+      });
+
+      const filterList = document.querySelector('.collection-mobile-filter-modal__list');
+      if (filterList) {
+        filterList.addEventListener('click', (event) => {
+          const row = event.target.closest('.collection-mobile-filter-modal__row');
+          if (!row) return;
+          const group = row.closest('.collection-mobile-filter-modal__group');
+          if (!group) return;
+          group.classList.toggle('is-expanded');
+        });
+      }
+
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          filterOverlay.querySelectorAll('.collection-mobile-filter-modal__select').forEach((select) => {
+            select.selectedIndex = 0;
+          });
+        });
+      }
+    }
+
+    if (vehicleBtn && vehicleOverlay) {
+      vehicleBtn.addEventListener('click', () => openOverlay(vehicleOverlay));
+      if (vehicleCloseBtn) vehicleCloseBtn.addEventListener('click', () => closeOverlay(vehicleOverlay));
+
+      vehicleOverlay.addEventListener('click', (event) => {
+        if (event.target === vehicleOverlay) closeOverlay(vehicleOverlay);
+      });
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      if (filterOverlay?.classList.contains('is-open')) closeOverlay(filterOverlay);
+      if (vehicleOverlay?.classList.contains('is-open')) closeOverlay(vehicleOverlay);
+    });
+  </script>
+</VehicleGalleryLayout>

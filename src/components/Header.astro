@@ -162,8 +162,9 @@ const navItems = await getNavItems(baseUrl);
   .site-header__inner {
     max-width: 1230px;
     margin: 0 auto;
-    padding: 0 15px 0 0;
+    padding: 0 15px;
     width: 100%;
+    box-sizing: border-box;
   }
 
   /* Desktop */
@@ -171,8 +172,9 @@ const navItems = await getNavItems(baseUrl);
     display: flex;
     align-items: center;
     justify-content: start;
-    padding: 1rem 1.5rem;
+    padding: 1rem 0;
     background-color: #000000;
+    width: 100%;
   }
 
   .site-header__top--desktop .site-header__inner {
@@ -218,6 +220,11 @@ const navItems = await getNavItems(baseUrl);
     overflow: visible;
     transition: max-height 0.35s ease;
     background-color: #1C1D21;
+    width: 100%;
+  }
+
+  .site-header__nav-wrap .site-header__inner {
+    display: block;
   }
 
   .site-header__nav-item:hover,
@@ -313,9 +320,11 @@ const navItems = await getNavItems(baseUrl);
     align-items: center;
     justify-content: flex-start;
     gap: 1.5rem;
-    padding: 1rem 1.5rem 1rem 0;
+    width: 100%;
+    padding: 1rem 0;
     flex-wrap: wrap;
     position: relative;
+    box-sizing: border-box;
   }
 
   .site-header__nav-item {

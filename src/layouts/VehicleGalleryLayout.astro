@@ -5,7 +5,7 @@ interface Props {
   schemaJsonLd?: string;
 }
 
-const { pageTitle: titleProp, metaDescription} = Astro.props;
+const { pageTitle: titleProp, metaDescription, schemaJsonLd } = Astro.props;
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 
@@ -21,7 +21,9 @@ const pageTitle = titleProp ?? 'Vehicle Gallery | Three Piece';
     {metaDescription && (
       <meta name="description" content={metaDescription.replace(/"/g, '&quot;')} />
     )}
-  
+    {schemaJsonLd && (
+      <script type="application/ld+json" set:html={schemaJsonLd} />
+    )}
     <meta name="google-site-verification" content="BguNbBNXmRkDoM059pKt67XRl6AJR7EbTIZdzmrmye4" />
   </head>
   <body>
