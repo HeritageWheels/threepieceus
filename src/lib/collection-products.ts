@@ -1,10 +1,16 @@
 import { findCategoryRouteById, supportsWheelFilters } from './category-routes';
+import { appendVehicleUrlParams, parseVehicleUrlParams } from './vehicle-url-params';
 import {
   appendWheelFilterParams,
-  buildWheelProductAttributesGraphQL,
+  buildWheelProductAttributes,
   hasWheelFilterSelections,
   type WheelFilterSelections,
 } from './wheel-filters';
+
+export interface ProductAttributeFilter {
+  attribute: string;
+  values: string[];
+}
 
 export const COLLECTION_PAGE_SIZE = 30;
 const PAGE_SIZE = COLLECTION_PAGE_SIZE;
@@ -110,6 +116,8 @@ export interface CollectionProductFilters {
   brandEntityIds?: number[];
   stock?: CollectionStockFilter;
   wheelFilters?: WheelFilterSelections;
+  /** Extra productAttributes (e.g. from vehicle OEM fitment). Merged with wheelFilters. */
+  productAttributes?: ProductAttributeFilter[];
 }
 
 export interface CollectionFacetOption {
@@ -204,6 +212,8 @@ export function getCollectionPaginationBaseUrl(requestUrl: URL, categoryId: numb
       offset: requestUrl.searchParams.get('wheel_offset') ?? undefined,
     });
   }
+
+  appendVehicleUrlParams(url, parseVehicleUrlParams(requestUrl.searchParams));
 
   return url;
 }
@@ -336,10 +346,20 @@ function buildSearchFiltersGraphQL(
     parts.push(`hideOutOfStock: ${isInStockOnly ? 'true' : 'false'}`);
   }
 
-  const wheelAttributesGraphQL = buildWheelProductAttributesGraphQL(
-    productFilters.wheelFilters ?? {},
-  );
-  if (wheelAttributesGraphQL) parts.push(wheelAttributesGraphQL);
+  const attributeEntries = [
+    ...buildWheelProductAttributes(productFilters.wheelFilters ?? {}),
+    ...(productFilters.productAttributes ?? []),
+  ].filter((entry) => entry.values.length > 0);
+
+  if (attributeEntries.length) {
+    const items = attributeEntries
+      .map(
+        (entry) =>
+          `{ attribute: ${JSON.stringify(entry.attribute)}, values: ${JSON.stringify(entry.values)} }`,
+      )
+      .join(', ');
+    parts.push(`productAttributes: [${items}]`);
+  }
 
   return `{ ${parts.join(', ')} }`;
 }
@@ -881,7 +901,8 @@ export async function getCollectionProducts(
       (productFilters.categoryEntityIds?.length ?? 0) > 0 ||
       (productFilters.brandEntityIds?.length ?? 0) > 0 ||
       stockSelection.isOutOfStockOnly ||
-      hasWheelFilterSelections(productFilters.wheelFilters ?? {});
+      hasWheelFilterSelections(productFilters.wheelFilters ?? {}) ||
+      (productFilters.productAttributes?.length ?? 0) > 0;
 
     const filteredCount = filteredTotalItems ?? 0;
     const totalItems = hasActiveFilters

@@ -376,11 +376,16 @@ body {
       font-size: 0.95rem;
       font-family: inherit;
       color: $color-muted;
-      cursor: not-allowed;
 
       &:disabled {
         opacity: 1;
         background-color: #fff;
+        cursor: not-allowed;
+      }
+
+      &:not(:disabled) {
+        color: $color-text;
+        cursor: pointer;
       }
     }
 
@@ -409,15 +414,17 @@ body {
       }
 
       &--go {
-        border: 1px solid $color-border;
-        background: #e8e8e8;
-        color: #888;
+        border: 1px solid $color-blue;
+        background: $color-blue;
+        color: #fff;
+        cursor: pointer;
       }
 
       &--clear {
         border: 1px solid $color-blue;
         background: #fff;
         color: $color-blue;
+        cursor: pointer;
       }
     }
   }
@@ -665,10 +672,10 @@ body {
     text-transform: uppercase;
 
     &--go {
-      border: 1px solid $color-border;
-      background: #e8e8e8;
-      color: #888;
-      cursor: not-allowed;
+      border: 1px solid $color-blue;
+      background: $color-blue;
+      color: #fff;
+      cursor: pointer;
     }
 
     &--clear {

@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/new-wheels",
+      "destination": "/collections?categoryId=58&name=New%20Wheels&parentName=Shop&parentPath=%2Fshop"
+    },
+    {
       "source": "/exhaust",
       "destination": "/collections?categoryId=0&name=Exhaust&parentName=Shop&parentPath=%2Fshop"
     },
@@ -8,6 +12,5 @@
       "source": "/suspension",
       "destination": "/collections?categoryId=971&name=Suspension&parentName=Shop&parentPath=%2Fshop"
     }
-  ],
-  "_comment": "new-wheels rewrite disabled temporarily: { source: /new-wheels, destination: /collections?categoryId=58&name=New%20Wheels&parentName=Shop&parentPath=%2Fshop }"
+  ]
 }

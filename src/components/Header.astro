@@ -36,19 +36,10 @@ const navItems = await getNavItems(baseUrl);
           {item.children.length > 0 && (
             <div class="site-header__mega" aria-hidden="true">
               <div class="site-header__mega-inner">
-                <p class="site-header__mega-title">{item.name}</p>
-                <a href={item.href} class="site-header__mega-view-all">View all {item.name}</a>
                 <ul class="site-header__mega-list" aria-label={`Categories under ${item.name}`}>
                   {item.children.map((child) => (
-                    <li class={`site-header__mega-list-item${child.children.length > 0 ? ' site-header__mega-list-item--has-sub' : ''}`}>
+                    <li class="site-header__mega-list-item">
                       <a href={child.href} class="site-header__mega-link">{child.name}</a>
-                      {child.children.length > 0 && (
-                        <ul class="site-header__mega-sublist">
-                          {child.children.map((sub) => (
-                            <li><a href={sub.href} class="site-header__mega-sublink">{sub.name}</a></li>
-                          ))}
-                        </ul>
-                      )}
                     </li>
                   ))}
                 </ul>
@@ -86,65 +77,27 @@ const navItems = await getNavItems(baseUrl);
           </span>
           <a href={`${baseUrl}/login.php`}>SIGN IN</a><span class="site-header__auth-sep"> or </span><a href={`${baseUrl}/login.php?action=create_account`}>REGISTER</a>
         </div>
-        {navItems.map((item) => {
-          const hasSubmenus = item.children.some((c) => c.children.length > 0);
-          const useCollapsible = item.children.length > 0 && hasSubmenus;
-          return (
+        {navItems.map((item) => (
           <div class="site-header__panel-group">
             {item.children.length > 0 ? (
-              useCollapsible ? (
-                <>
-                  <button type="button" class="site-header__panel-toggle" aria-expanded="false" data-panel-toggle>
-                    <span>{item.name}</span>
-                    <span class="site-header__panel-chevron site-header__panel-chevron--toggle" aria-hidden="true">&#x203A;</span>
-                  </button>
-                  <div class="site-header__panel-children" hidden>
-                    <a href={item.href} class="site-header__panel-item site-header__panel-item--view-all">View all {item.name}</a>
-                    {item.children.map((child) => (
-                      <div class="site-header__panel-child-block">
-                        {child.children.length > 0 ? (
-                          <>
-                            <button type="button" class="site-header__panel-item site-header__panel-item--child site-header__panel-sub-toggle" aria-expanded="false" data-panel-sub-toggle>
-                              {child.name}
-                              <span class="site-header__panel-chevron site-header__panel-chevron--sub" aria-hidden="true">&#x203A;</span>
-                            </button>
-                            <div class="site-header__panel-subchildren" hidden>
-                              <a href={child.href} class="site-header__panel-item site-header__panel-item--view-all">View all {child.name}</a>
-                              {child.children.map((sub) => (
-                                <a href={sub.href} class="site-header__panel-item site-header__panel-item--subchild">{sub.name}</a>
-                              ))}
-                            </div>
-                          </>
-                        ) : (
-                          <a href={child.href} class="site-header__panel-item site-header__panel-item--child">{child.name}</a>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <a href={item.href} class="site-header__panel-item site-header__panel-item--parent">
-                    {item.name}
-                    <span class="site-header__panel-chevron">&#x203A;</span>
-                  </a>
-                  <div class="site-header__panel-children">
-                    {item.children.map((child) => (
-                      <div class="site-header__panel-child-block">
-                        <a href={child.href} class="site-header__panel-item site-header__panel-item--child">{child.name}</a>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )
+              <>
+                <button type="button" class="site-header__panel-toggle" aria-expanded="false" data-panel-toggle>
+                  <span>{item.name}</span>
+                  <span class="site-header__panel-chevron site-header__panel-chevron--toggle" aria-hidden="true">&#x203A;</span>
+                </button>
+                <div class="site-header__panel-children" hidden>
+                  {item.children.map((child) => (
+                    <a href={child.href} class="site-header__panel-item site-header__panel-item--child">{child.name}</a>
+                  ))}
+                </div>
+              </>
             ) : (
               <a href={item.href} class="site-header__panel-item site-header__panel-item--parent">
                 {item.name}
               </a>
             )}
           </div>
-          );
-        })}
+        ))}
       </nav>
     </div>
   </div>
@@ -819,21 +772,6 @@ const navItems = await getNavItems(baseUrl);
     if (panel && !panel.dataset.bound) {
       panel.dataset.bound = 'true';
       panel.addEventListener('click', function (e) {
-        var subBtn = e.target.closest('[data-panel-sub-toggle]');
-        if (subBtn) {
-          e.preventDefault();
-          var block = subBtn.closest('.site-header__panel-child-block');
-          var subChildren = block && block.querySelector('.site-header__panel-subchildren');
-          if (!block || !subChildren) return;
-          var expanded = block.classList.toggle('is-expanded');
-          subBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-          if (expanded) {
-            subChildren.removeAttribute('hidden');
-          } else {
-            subChildren.setAttribute('hidden', '');
-          }
-          return;
-        }
         var btn = e.target.closest('[data-panel-toggle]');
         if (!btn) return;
         e.preventDefault();

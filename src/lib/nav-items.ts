@@ -18,7 +18,6 @@ export interface NavChild {
   name: string;
   href: string;
   category_id?: number;
-  children: { name: string; href: string }[];
 }
 
 export interface NavItem {
@@ -28,6 +27,8 @@ export interface NavItem {
 }
 
 const CACHE_TTL_MS = 60 * 60 * 1000;
+const MAX_CATEGORY_PAGES = 20;
+
 let cachedNavItems: NavItem[] | null = null;
 let cacheExpiresAt = 0;
 
@@ -63,7 +64,7 @@ async function fetchCategories(query: URLSearchParams): Promise<CategoryNode[]> 
   const all: CategoryNode[] = [];
   let page = 1;
 
-  while (page <= 10) {
+  while (page <= MAX_CATEGORY_PAGES) {
     const params = new URLSearchParams(query);
     params.set('is_visible', 'true');
     params.set('limit', '250');
@@ -78,7 +79,10 @@ async function fetchCategories(query: URLSearchParams): Promise<CategoryNode[]> 
       },
     });
 
-    if (!res.ok) break;
+    if (!res.ok) {
+      console.error('nav-items: BigCommerce categories request failed:', res.status, params.toString());
+      break;
+    }
 
     const batch = parseCategoryList(await res.json());
     all.push(...batch.filter((n) => n.name));
@@ -90,26 +94,10 @@ async function fetchCategories(query: URLSearchParams): Promise<CategoryNode[]> 
   return all;
 }
 
-function groupCategoriesByParent(categories: CategoryNode[]): Map<number, CategoryNode[]> {
-  const childrenByParent = new Map<number, CategoryNode[]>();
-
-  for (const category of categories) {
-    const parentId = category.parent_id ?? 0;
-    const siblings = childrenByParent.get(parentId);
-    if (siblings) {
-      siblings.push(category);
-    } else {
-      childrenByParent.set(parentId, [category]);
-    }
-  }
-
-  return childrenByParent;
-}
-
 function buildNavItems(
   baseUrl: string,
   rootParents: CategoryNode[],
-  childrenByParent: Map<number, CategoryNode[]>,
+  childrenByParentId: Map<number, CategoryNode[]>,
 ): NavItem[] {
   return TOP_LEVEL_NAV.map((item) => {
     const parent = rootParents.find((p) => p.name && sameName(p.name, item.name));
@@ -122,17 +110,10 @@ function buildNavItems(
       };
     }
 
-    const children = (childrenByParent.get(parent.category_id) ?? []).map((node) => ({
+    const children = (childrenByParentId.get(parent.category_id) ?? []).map((node) => ({
       name: node.name!,
       href: toHref(baseUrl, node.url?.path),
       category_id: node.category_id,
-      children: (node.category_id
-        ? (childrenByParent.get(node.category_id) ?? [])
-        : []
-      ).map((sub) => ({
-        name: sub.name!,
-        href: toHref(baseUrl, sub.url?.path),
-      })),
     }));
 
     return {
@@ -143,29 +124,56 @@ function buildNavItems(
   });
 }
 
+/** Clears the in-memory nav cache (e.g. after category changes in dev). */
+export function clearNavItemsCache(): void {
+  cachedNavItems = null;
+  cacheExpiresAt = 0;
+}
+
 export async function getNavItems(baseUrl = 'https://threepiece.us'): Promise<NavItem[]> {
   const now = Date.now();
   if (cachedNavItems && now < cacheExpiresAt) {
     return cachedNavItems;
   }
 
-  try {
-    const [rootParents, allCategories] = await Promise.all([
-      fetchCategories(new URLSearchParams({ 'parent_id:in': '0' })),
-      fetchCategories(new URLSearchParams()),
-    ]);
+  const token = import.meta.env.BIGCOMMERCE_ACCESS_TOKEN;
+  const storeHash = import.meta.env.BIGCOMMERCE_STORE_HASH;
 
-    if (!rootParents.length && !allCategories.length) {
+  if (!token || !storeHash) {
+    console.warn('nav-items: missing BIGCOMMERCE_ACCESS_TOKEN or BIGCOMMERCE_STORE_HASH, using fallback nav');
+    return fallbackNavItems(baseUrl);
+  }
+
+  try {
+    const rootParents = await fetchCategories(new URLSearchParams({ 'parent_id:in': '0' }));
+
+    if (!rootParents.length) {
+      console.warn('nav-items: no root categories returned from BigCommerce, using fallback nav');
       return fallbackNavItems(baseUrl);
     }
 
-    const childrenByParent = groupCategoriesByParent(
-      allCategories.length ? allCategories : rootParents,
+    const matchedParents = TOP_LEVEL_NAV.map((item) => ({
+      item,
+      parent: rootParents.find((p) => p.name && sameName(p.name, item.name)),
+    })).filter((entry) => entry.parent?.category_id);
+
+    const childrenByParentId = new Map<number, CategoryNode[]>();
+
+    await Promise.all(
+      matchedParents.map(async ({ parent }) => {
+        const categoryId = parent!.category_id!;
+        const children = await fetchCategories(
+          new URLSearchParams({ 'parent_id:in': String(categoryId) }),
+        );
+        childrenByParentId.set(categoryId, children);
+      }),
     );
-    cachedNavItems = buildNavItems(baseUrl, rootParents, childrenByParent);
+
+    cachedNavItems = buildNavItems(baseUrl, rootParents, childrenByParentId);
     cacheExpiresAt = now + CACHE_TTL_MS;
     return cachedNavItems;
-  } catch {
+  } catch (error) {
+    console.error('nav-items: failed to build nav from BigCommerce:', error);
     return fallbackNavItems(baseUrl);
   }
 }

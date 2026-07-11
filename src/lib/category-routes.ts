@@ -24,14 +24,13 @@ export interface CategoryRoute {
 export const WHEEL_FILTER_CATEGORY_IDS = [58] as const;
 
 export const CATEGORY_ROUTES: CategoryRoute[] = [
-  // Temporarily disabled — restore rewrite in vercel.json to re-enable
-  // {
-  //   path: '/new-wheels',
-  //   categoryId: 58,
-  //   name: 'New Wheels',
-  //   parent: { name: 'Shop', path: '/shop' },
-  //   wheelFilters: true,
-  // },
+  {
+    path: '/new-wheels',
+    categoryId: 58,
+    name: 'New Wheels',
+    parent: { name: 'Shop', path: '/shop' },
+    wheelFilters: true,
+  },
   {
     path: '/exhaust',
     categoryId: 9349,

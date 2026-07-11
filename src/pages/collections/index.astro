@@ -12,11 +12,19 @@ import {
 } from '../../lib/collection-products';
 import { supportsWheelFilters } from '../../lib/category-routes';
 import {
+  buildOemProductAttributeFilters,
   getWheelFilterState,
   hasWheelFilterSelections,
   parseWheelFilterSelections,
   WHEEL_FILTER_FIELDS,
 } from '../../lib/wheel-filters';
+import {
+  getMergedVehicleFitmentData,
+  getVehicleYears,
+  getVehicles,
+} from '../../lib/vehicle-fitment';
+import { normalizeVehicleFitmentList } from '../../lib/normalize-vehicle-fitment';
+import { parseVehicleUrlParams } from '../../lib/vehicle-url-params';
 import './collections.scss';
 
 const storeBaseUrl = 'https://threepiece.us';
@@ -45,12 +53,37 @@ const after = searchParams.get('after');
 const before = searchParams.get('before');
 const isFirstPage = !after && !before;
 
+const selectedVehicle = parseVehicleUrlParams(searchParams);
+const hasFullVehicle = Boolean(
+  selectedVehicle.year &&
+    selectedVehicle.make &&
+    selectedVehicle.model &&
+    selectedVehicle.bodyType &&
+    selectedVehicle.subModel,
+);
+
+let vehicleProductAttributes: { attribute: string; values: string[] }[] = [];
+if (showWheelFilters && hasFullVehicle) {
+  const vehicleRecords = await getVehicles(
+    selectedVehicle.year,
+    selectedVehicle.make,
+    selectedVehicle.model,
+    selectedVehicle.bodyType,
+    selectedVehicle.subModel,
+  );
+  const fitment = await getMergedVehicleFitmentData(vehicleRecords);
+  vehicleProductAttributes = buildOemProductAttributeFilters(
+    normalizeVehicleFitmentList(fitment),
+  );
+}
+
 const wheelFilterContext = showWheelFilters
   ? {
       categoryId,
       categoryEntityIds: selectedCategoryIds,
       brandEntityIds: selectedBrandIds,
       hideOutOfStock: selectedStock !== 'out',
+      productAttributeFilters: vehicleProductAttributes,
     }
   : null;
 
@@ -71,6 +104,7 @@ const collectionResult = hasCategory
         brandEntityIds: selectedBrandIds,
         stock: selectedStock,
         wheelFilters: activeWheelFilters,
+        productAttributes: vehicleProductAttributes,
       },
     )
   : null;
@@ -122,6 +156,8 @@ const mobileProductFilters = [
 const wheelFilterParamNames = showWheelFilters
   ? WHEEL_FILTER_FIELDS.map((field) => field.urlParam)
   : [];
+
+const vehicleYears = await getVehicleYears();
 ---
 
 <VehicleGalleryLayout pageTitle={pageTitle} metaDescription={metaDescription}>
@@ -220,28 +256,37 @@ const wheelFilterParamNames = showWheelFilters
           <h2 class="collection-vehicle-modal__title" id="collection-vehicle-title">
             Select Your Vehicle
           </h2>
-          <div class="collection-vehicle-modal__fields">
+          <div class="collection-vehicle-modal__fields" data-vehicle-selector>
             <label class="collection-vehicle-modal__field">
               <span class="visually-hidden">Year</span>
-              <select class="collection-vehicle-modal__select" disabled aria-label="Year">
+              <select class="collection-vehicle-modal__select" aria-label="Year" data-vehicle-field="year" disabled={vehicleYears.length === 0}>
                 <option value="">Year</option>
+                {vehicleYears.map((year) => (
+                  <option value={year} selected={selectedVehicle.year === year}>{year}</option>
+                ))}
               </select>
             </label>
             <label class="collection-vehicle-modal__field">
               <span class="visually-hidden">Make</span>
-              <select class="collection-vehicle-modal__select" disabled aria-label="Make">
+              <select class="collection-vehicle-modal__select" aria-label="Make" data-vehicle-field="make" disabled>
                 <option value="">Make</option>
               </select>
             </label>
             <label class="collection-vehicle-modal__field">
               <span class="visually-hidden">Model</span>
-              <select class="collection-vehicle-modal__select" disabled aria-label="Model">
+              <select class="collection-vehicle-modal__select" aria-label="Model" data-vehicle-field="model" disabled>
                 <option value="">Model</option>
               </select>
             </label>
             <label class="collection-vehicle-modal__field">
+              <span class="visually-hidden">Body Type</span>
+              <select class="collection-vehicle-modal__select" aria-label="Body Type" data-vehicle-field="bodyType" disabled>
+                <option value="">Body Type</option>
+              </select>
+            </label>
+            <label class="collection-vehicle-modal__field">
               <span class="visually-hidden">Submodel</span>
-              <select class="collection-vehicle-modal__select" disabled aria-label="Submodel">
+              <select class="collection-vehicle-modal__select" aria-label="Submodel" data-vehicle-field="subModel" disabled>
                 <option value="">Submodel</option>
               </select>
             </label>
@@ -250,14 +295,14 @@ const wheelFilterParamNames = showWheelFilters
             <button
               type="button"
               class="collection-vehicle-modal__btn collection-vehicle-modal__btn--go"
-              disabled
+              data-vehicle-go
             >
               Go
             </button>
             <button
               type="button"
               class="collection-vehicle-modal__btn collection-vehicle-modal__btn--clear"
-              disabled
+              data-vehicle-clear
             >
               Clear
             </button>
@@ -268,37 +313,46 @@ const wheelFilterParamNames = showWheelFilters
       <div class="collection-layout">
         <aside class="collection-filters" aria-label="Filters">
           <div class="collection-sidebar">
-            <div class="collection-sidebar__vehicle">
+            <div class="collection-sidebar__vehicle" data-vehicle-selector>
               <h2 class="collection-sidebar__heading">Select Your Vehicle</h2>
               <label class="collection-filter-field">
                 <span class="visually-hidden">Year</span>
-                <select class="collection-filter-field__select" disabled aria-label="Year">
+                <select class="collection-filter-field__select" aria-label="Year" data-vehicle-field="year" disabled={vehicleYears.length === 0}>
                   <option value="">Year</option>
+                  {vehicleYears.map((year) => (
+                    <option value={year} selected={selectedVehicle.year === year}>{year}</option>
+                  ))}
                 </select>
               </label>
               <label class="collection-filter-field">
                 <span class="visually-hidden">Make</span>
-                <select class="collection-filter-field__select" disabled aria-label="Make">
+                <select class="collection-filter-field__select" aria-label="Make" data-vehicle-field="make" disabled>
                   <option value="">Make</option>
                 </select>
               </label>
               <label class="collection-filter-field">
                 <span class="visually-hidden">Model</span>
-                <select class="collection-filter-field__select" disabled aria-label="Model">
+                <select class="collection-filter-field__select" aria-label="Model" data-vehicle-field="model" disabled>
                   <option value="">Model</option>
                 </select>
               </label>
               <label class="collection-filter-field">
+                <span class="visually-hidden">Body Type</span>
+                <select class="collection-filter-field__select" aria-label="Body Type" data-vehicle-field="bodyType" disabled>
+                  <option value="">Body Type</option>
+                </select>
+              </label>
+              <label class="collection-filter-field">
                 <span class="visually-hidden">Submodel</span>
-                <select class="collection-filter-field__select" disabled aria-label="Submodel">
+                <select class="collection-filter-field__select" aria-label="Submodel" data-vehicle-field="subModel" disabled>
                   <option value="">Submodel</option>
                 </select>
               </label>
               <div class="collection-filter-group__actions">
-                <button type="button" class="collection-filter-btn collection-filter-btn--go" disabled>
+                <button type="button" class="collection-filter-btn collection-filter-btn--go" data-vehicle-go>
                   Go
                 </button>
-                <button type="button" class="collection-filter-btn collection-filter-btn--clear" disabled>
+                <button type="button" class="collection-filter-btn collection-filter-btn--clear" data-vehicle-clear>
                   Clear
                 </button>
               </div>
@@ -775,5 +829,336 @@ const wheelFilterParamNames = showWheelFilters
       if (filterOverlay?.classList.contains('is-open')) closeOverlay(filterOverlay);
       if (vehicleOverlay?.classList.contains('is-open')) closeOverlay(vehicleOverlay);
     });
+
+    const vehicleSelectors = document.querySelectorAll('[data-vehicle-selector]');
+    if (vehicleSelectors.length) {
+      const VEHICLE_URL_PARAMS = {
+        year: 'vehicle_year',
+        make: 'vehicle_make',
+        model: 'vehicle_model',
+        bodyType: 'vehicle_body_type',
+        subModel: 'vehicle_submodel',
+      };
+
+      function getVehicleSelectionFromDom() {
+        const firstSelector = vehicleSelectors[0];
+        return {
+          year: firstSelector.querySelector('[data-vehicle-field="year"]')?.value ?? '',
+          make: firstSelector.querySelector('[data-vehicle-field="make"]')?.value ?? '',
+          model: firstSelector.querySelector('[data-vehicle-field="model"]')?.value ?? '',
+          bodyType: firstSelector.querySelector('[data-vehicle-field="bodyType"]')?.value ?? '',
+          subModel: firstSelector.querySelector('[data-vehicle-field="subModel"]')?.value ?? '',
+        };
+      }
+
+      function getVehicleSelectionFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+          year: params.get(VEHICLE_URL_PARAMS.year) ?? '',
+          make: params.get(VEHICLE_URL_PARAMS.make) ?? '',
+          model: params.get(VEHICLE_URL_PARAMS.model) ?? '',
+          bodyType: params.get(VEHICLE_URL_PARAMS.bodyType) ?? '',
+          subModel: params.get(VEHICLE_URL_PARAMS.subModel) ?? '',
+        };
+      }
+
+      function syncVehicleSelectionToUrl() {
+        const url = new URL(window.location.href);
+        const selection = getVehicleSelectionFromDom();
+
+        for (const [key, param] of Object.entries(VEHICLE_URL_PARAMS)) {
+          const value = selection[key]?.trim();
+          if (value) url.searchParams.set(param, value);
+          else url.searchParams.delete(param);
+        }
+
+        window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+      }
+
+      function setAllFieldValues(field, value) {
+        vehicleSelectors.forEach((selector) => {
+          const select = selector.querySelector(`[data-vehicle-field="${field}"]`);
+          if (select) select.value = value;
+        });
+      }
+
+      function clearDownstreamFields(changedField) {
+        const order = ['year', 'make', 'model', 'bodyType', 'subModel'];
+        const changedIndex = order.indexOf(changedField);
+        if (changedIndex === -1) return;
+
+        for (let index = changedIndex + 1; index < order.length; index += 1) {
+          setAllFieldValues(order[index], '');
+        }
+      }
+
+      function resetSelect(select, placeholder) {
+        if (!select) return;
+        select.innerHTML = '';
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = placeholder;
+        select.appendChild(option);
+        select.value = '';
+      }
+
+      function fillSelect(select, values, placeholder, selectedValue = '') {
+        if (!select) return;
+        resetSelect(select, placeholder);
+        values.forEach((value) => {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = value;
+          select.appendChild(option);
+        });
+        select.disabled = values.length === 0;
+        if (selectedValue && values.includes(selectedValue)) {
+          select.value = selectedValue;
+        }
+      }
+
+      function fillAllSelects(field, values, placeholder, selectedValue = '') {
+        vehicleSelectors.forEach((selector) => {
+          const select = selector.querySelector(`[data-vehicle-field="${field}"]`);
+          fillSelect(select, values, placeholder, selectedValue);
+        });
+      }
+
+      function resetAllSelects(field, placeholder) {
+        vehicleSelectors.forEach((selector) => {
+          const select = selector.querySelector(`[data-vehicle-field="${field}"]`);
+          resetSelect(select, placeholder);
+          if (select) select.disabled = true;
+        });
+      }
+
+      async function loadMakes(year, selectedMake = '') {
+        resetAllSelects('model', 'Model');
+        resetAllSelects('bodyType', 'Body Type');
+        resetAllSelects('subModel', 'Submodel');
+
+        if (!year) {
+          resetAllSelects('make', 'Make');
+          return;
+        }
+
+        resetAllSelects('make', 'Make');
+
+        try {
+          const res = await fetch(`/api/vehicle-makes?year=${encodeURIComponent(year)}`);
+          const data = await res.json().catch(() => ({}));
+          const makes = Array.isArray(data.makes) ? data.makes : [];
+          fillAllSelects('make', makes, 'Make', selectedMake);
+        } catch {
+          resetAllSelects('make', 'Make');
+        }
+      }
+
+      async function loadModels(year, make, selectedModel = '') {
+        resetAllSelects('bodyType', 'Body Type');
+        resetAllSelects('subModel', 'Submodel');
+
+        if (!year || !make) {
+          resetAllSelects('model', 'Model');
+          return;
+        }
+
+        resetAllSelects('model', 'Model');
+
+        try {
+          const res = await fetch(
+            `/api/vehicle-models?year=${encodeURIComponent(year)}&make=${encodeURIComponent(make)}`,
+          );
+          const data = await res.json().catch(() => ({}));
+          const models = Array.isArray(data.models) ? data.models : [];
+          fillAllSelects('model', models, 'Model', selectedModel);
+        } catch {
+          resetAllSelects('model', 'Model');
+        }
+      }
+
+      async function loadBodyTypes(year, make, model, selectedBodyType = '') {
+        resetAllSelects('subModel', 'Submodel');
+
+        if (!year || !make || !model) {
+          resetAllSelects('bodyType', 'Body Type');
+          return;
+        }
+
+        resetAllSelects('bodyType', 'Body Type');
+
+        try {
+          const res = await fetch(
+            `/api/vehicle-body-types?year=${encodeURIComponent(year)}&make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}`,
+          );
+          const data = await res.json().catch(() => ({}));
+          const bodyTypes = Array.isArray(data.bodyTypes) ? data.bodyTypes : [];
+          fillAllSelects('bodyType', bodyTypes, 'Body Type', selectedBodyType);
+        } catch {
+          resetAllSelects('bodyType', 'Body Type');
+        }
+      }
+
+      async function loadSubModels(year, make, model, bodyType, selectedSubModel = '') {
+        if (!year || !make || !model || !bodyType) {
+          resetAllSelects('subModel', 'Submodel');
+          return;
+        }
+
+        resetAllSelects('subModel', 'Submodel');
+
+        try {
+          const res = await fetch(
+            `/api/vehicle-submodels?year=${encodeURIComponent(year)}&make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&bodyType=${encodeURIComponent(bodyType)}`,
+          );
+          const data = await res.json().catch(() => ({}));
+          const subModels = Array.isArray(data.subModels) ? data.subModels : [];
+          fillAllSelects('subModel', subModels, 'Submodel', selectedSubModel);
+        } catch {
+          resetAllSelects('subModel', 'Submodel');
+        }
+      }
+
+      async function loadVehicles(year, make, model, bodyType, subModel) {
+        if (!year || !make || !model || !bodyType || !subModel) return;
+
+        const categoryId = document.getElementById('collection-page')?.dataset.categoryId ?? '';
+
+        try {
+          const params = new URLSearchParams({
+            year,
+            make,
+            model,
+            bodyType,
+            subModel,
+          });
+          if (categoryId) params.set('categoryId', categoryId);
+
+          const res = await fetch(`/api/vehicles?${params}`);
+          const data = await res.json().catch(() => ({}));
+          const normalizedFitment = Array.isArray(data.normalizedFitment)
+            ? data.normalizedFitment
+            : [];
+          console.log('Normalized vehicle fitment:', normalizedFitment);
+          console.log('OEM fitment products:', data.fitmentProducts);
+        } catch (error) {
+          console.error('Failed to fetch vehicle fitment products:', error);
+        }
+      }
+
+      async function restoreVehicleFromUrl() {
+        const saved = getVehicleSelectionFromUrl();
+        if (!saved.year) return;
+
+        setAllFieldValues('year', saved.year);
+        await loadMakes(saved.year, saved.make);
+
+        if (saved.make) {
+          await loadModels(saved.year, saved.make, saved.model);
+        }
+
+        if (saved.make && saved.model) {
+          await loadBodyTypes(saved.year, saved.make, saved.model, saved.bodyType);
+        }
+
+        if (saved.make && saved.model && saved.bodyType) {
+          await loadSubModels(
+            saved.year,
+            saved.make,
+            saved.model,
+            saved.bodyType,
+            saved.subModel,
+          );
+        }
+
+        if (saved.year && saved.make && saved.model && saved.bodyType && saved.subModel) {
+          await loadVehicles(
+            saved.year,
+            saved.make,
+            saved.model,
+            saved.bodyType,
+            saved.subModel,
+          );
+        }
+      }
+
+      function clearVehicle() {
+        setAllFieldValues('year', '');
+        syncVehicleSelectionToUrl();
+        loadMakes('');
+      }
+
+      document.querySelectorAll('[data-vehicle-clear]').forEach((clearBtn) => {
+        clearBtn.addEventListener('click', clearVehicle);
+      });
+
+      // Go navigates to the URL with vehicle params so the server renders the
+      // OEM-filtered product grid (and pagination resets).
+      function applyVehicleFilter() {
+        const url = new URL(window.location.href);
+        const selection = getVehicleSelectionFromDom();
+
+        for (const [key, param] of Object.entries(VEHICLE_URL_PARAMS)) {
+          const value = selection[key]?.trim();
+          if (value) url.searchParams.set(param, value);
+          else url.searchParams.delete(param);
+        }
+
+        url.searchParams.delete('after');
+        url.searchParams.delete('before');
+        url.searchParams.delete('page');
+        window.location.href = `${url.pathname}${url.search}`;
+      }
+
+      document.querySelectorAll('[data-vehicle-go]').forEach((goBtn) => {
+        goBtn.addEventListener('click', applyVehicleFilter);
+      });
+
+      document.addEventListener('change', (event) => {
+        const select = event.target.closest('[data-vehicle-selector] [data-vehicle-field]');
+        if (!select) return;
+
+        const field = select.getAttribute('data-vehicle-field');
+        if (!field) return;
+
+        setAllFieldValues(field, select.value);
+        clearDownstreamFields(field);
+        syncVehicleSelectionToUrl();
+
+        const selection = getVehicleSelectionFromDom();
+
+        if (field === 'year') {
+          loadMakes(selection.year);
+          return;
+        }
+
+        if (field === 'make') {
+          loadModels(selection.year, selection.make);
+          return;
+        }
+
+        if (field === 'model') {
+          loadBodyTypes(selection.year, selection.make, selection.model);
+          return;
+        }
+
+        if (field === 'bodyType') {
+          loadSubModels(selection.year, selection.make, selection.model, selection.bodyType);
+          return;
+        }
+
+        if (field === 'subModel') {
+          loadVehicles(
+            selection.year,
+            selection.make,
+            selection.model,
+            selection.bodyType,
+            selection.subModel,
+          );
+        }
+      });
+
+      restoreVehicleFromUrl();
+    }
   </script>
 </VehicleGalleryLayout>

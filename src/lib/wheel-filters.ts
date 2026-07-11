@@ -1,3 +1,5 @@
+import type { NormalizedVehicleFitment } from './normalize-vehicle-fitment';
+
 export interface WheelFilterFieldDefinition {
   key: 'diameter' | 'width' | 'bolt' | 'offset';
   label: string;
@@ -68,6 +70,15 @@ export const WHEEL_FILTER_FIELDS: WheelFilterFieldDefinition[] = [
 const CUSTOM_FIELD_PAGE_SIZE = 50;
 const CACHE_TTL_MS = 15 * 60 * 1000;
 
+/**
+ * Custom field names are entered per-product in BigCommerce and their casing is
+ * inconsistent across the catalog (e.g. "DIAMETER" vs "Diameter"). Canonicalize
+ * to a case-insensitive key so detection and aggregation match reliably.
+ */
+function toCustomFieldKey(name: string): string {
+  return name.trim().toUpperCase();
+}
+
 interface CustomFieldAggregationCacheEntry {
   expiresAt: number;
   valuesByField: Map<string, Map<string, number>>;
@@ -134,11 +145,158 @@ export function buildWheelProductAttributesGraphQL(
   return `productAttributes: [${items}]`;
 }
 
+export interface OemFitmentSearchContext {
+  categoryId: number;
+  categoryEntityIds?: number[];
+  brandEntityIds?: number[];
+  hideOutOfStock?: boolean;
+}
+
+export interface OemFitmentProduct {
+  entityId: number;
+  name: string;
+  path: string;
+}
+
+export interface OemFitmentSearchResult {
+  totalItems: number;
+  products: OemFitmentProduct[];
+  appliedAttributes: { attribute: string; values: string[] }[];
+}
+
+/**
+ * Maps normalized OEM fitment data to BigCommerce productAttributes filters.
+ * OEM front + rear values are combined and deduped per spec. Attribute names
+ * map to the product custom fields (Diameter, Width, Offset, PCD).
+ */
+export function buildOemProductAttributeFilters(
+  fitments: NormalizedVehicleFitment[],
+): { attribute: string; values: string[] }[] {
+  const diameters = new Set<string>();
+  const widths = new Set<string>();
+  const offsets = new Set<string>();
+  const boltPatterns = new Set<string>();
+
+  for (const fitment of fitments) {
+    for (const value of [...fitment.oem.front.diameters, ...fitment.oem.rear.diameters]) {
+      diameters.add(String(value));
+    }
+    for (const value of [...fitment.oem.front.widths, ...fitment.oem.rear.widths]) {
+      widths.add(String(value));
+    }
+    for (const value of [...fitment.oem.front.offsets, ...fitment.oem.rear.offsets]) {
+      offsets.add(String(value));
+    }
+    const boltPattern = fitment.compatibility.boltPattern?.trim();
+    if (boltPattern) boltPatterns.add(boltPattern);
+  }
+
+  const filters: { attribute: string; values: string[] }[] = [];
+  if (diameters.size) filters.push({ attribute: 'Diameter', values: [...diameters] });
+  if (widths.size) filters.push({ attribute: 'Width', values: [...widths] });
+  if (offsets.size) filters.push({ attribute: 'Offset', values: [...offsets] });
+  if (boltPatterns.size) filters.push({ attribute: 'PCD', values: [...boltPatterns] });
+
+  return filters;
+}
+
+/** Searches products matching the vehicle's OEM fitment via productAttributes. */
+export async function searchProductsByOemFitment(
+  context: OemFitmentSearchContext,
+  fitments: NormalizedVehicleFitment[],
+): Promise<OemFitmentSearchResult> {
+  const appliedAttributes = buildOemProductAttributeFilters(fitments);
+
+  const parts: string[] = [`hideOutOfStock: ${context.hideOutOfStock !== false ? 'true' : 'false'}`];
+  const categoryIds = context.categoryEntityIds?.filter((id) => id > 0) ?? [];
+  const brandIds = context.brandEntityIds?.filter((id) => id > 0) ?? [];
+
+  if (brandIds.length > 0) {
+    parts.push(`brandEntityIds: [${brandIds.join(', ')}]`);
+  }
+
+  if (categoryIds.length > 0) {
+    parts.push(
+      `categoryIdsFilter: { matchBehavior: OR, entityIds: [${categoryIds.join(', ')}] }`,
+    );
+  } else {
+    parts.push(`categoryEntityId: ${context.categoryId}`);
+    parts.push('searchSubCategories: true');
+  }
+
+  if (appliedAttributes.length) {
+    const items = appliedAttributes
+      .map(
+        (entry) =>
+          `{ attribute: ${JSON.stringify(entry.attribute)}, values: ${JSON.stringify(entry.values)} }`,
+      )
+      .join(', ');
+    parts.push(`productAttributes: [${items}]`);
+  }
+
+  const filtersGraphQL = `{ ${parts.join(', ')} }`;
+
+  const data = await graphqlFetch(`{
+  site {
+    search {
+      searchProducts(filters: ${filtersGraphQL}) {
+        products(first: 50) {
+          collectionInfo {
+            totalItems
+          }
+          edges {
+            node {
+              entityId
+              name
+              path
+            }
+          }
+        }
+      }
+    }
+  }
+}`);
+
+  const productsConnection = (data as {
+    data?: {
+      site?: {
+        search?: {
+          searchProducts?: {
+            products?: {
+              collectionInfo?: { totalItems?: number };
+              edges?: { node?: { entityId?: number; name?: string; path?: string } }[];
+            };
+          };
+        };
+      };
+    };
+  })?.data?.site?.search?.searchProducts?.products;
+
+  const products: OemFitmentProduct[] = [];
+  for (const edge of productsConnection?.edges ?? []) {
+    const node = edge?.node;
+    if (!node?.entityId || !node.name) continue;
+    products.push({ entityId: node.entityId, name: node.name, path: node.path ?? '' });
+  }
+
+  return {
+    totalItems: productsConnection?.collectionInfo?.totalItems ?? 0,
+    products,
+    appliedAttributes,
+  };
+}
+
 interface WheelFilterSearchContext {
   categoryId: number;
   categoryEntityIds?: number[];
   brandEntityIds?: number[];
   hideOutOfStock: boolean;
+  /**
+   * Base productAttributes filter applied to every option query (e.g. the OEM
+   * fitment of a selected vehicle). Narrows the option lists to products that
+   * fit the vehicle, intersected with inventory.
+   */
+  productAttributeFilters?: { attribute: string; values: string[] }[];
 }
 
 async function graphqlFetch(query: string): Promise<unknown> {
@@ -187,8 +345,20 @@ function buildWheelSearchFiltersGraphQL(
     parts.push('searchSubCategories: true');
   }
 
-  const wheelAttributesGraphQL = buildWheelProductAttributesGraphQL(wheelSelections);
-  if (wheelAttributesGraphQL) parts.push(wheelAttributesGraphQL);
+  const attributeEntries = [
+    ...buildWheelProductAttributes(wheelSelections),
+    ...(context.productAttributeFilters ?? []),
+  ].filter((entry) => entry.values.length > 0);
+
+  if (attributeEntries.length) {
+    const items = attributeEntries
+      .map(
+        (entry) =>
+          `{ attribute: ${JSON.stringify(entry.attribute)}, values: ${JSON.stringify(entry.values)} }`,
+      )
+      .join(', ');
+    parts.push(`productAttributes: [${items}]`);
+  }
 
   return `{ ${parts.join(', ')} }`;
 }
@@ -202,6 +372,7 @@ function buildWheelFilterCacheKey(
     categoryEntityIds: context.categoryEntityIds ?? [],
     brandEntityIds: context.brandEntityIds ?? [],
     hideOutOfStock: context.hideOutOfStock,
+    productAttributeFilters: context.productAttributeFilters ?? [],
     wheelSelections,
   });
 }
@@ -294,8 +465,11 @@ async function detectAvailableWheelFields(
   context: WheelFilterSearchContext,
 ): Promise<WheelFilterFieldDefinition[]> {
   const customFieldNames = await fetchCustomFieldNamesFromSample(context);
+  const availableKeys = new Set([...customFieldNames].map(toCustomFieldKey));
 
-  return WHEEL_FILTER_FIELDS.filter((field) => customFieldNames.has(field.customFieldName));
+  return WHEEL_FILTER_FIELDS.filter((field) =>
+    availableKeys.has(toCustomFieldKey(field.customFieldName)),
+  );
 }
 
 type ProductAttributeFilterConnection = {
@@ -405,7 +579,7 @@ async function fetchAllCustomFieldValuesFromCollection(
   const valuesByField = new Map<string, Map<string, number>>();
 
   for (const name of customFieldNames) {
-    valuesByField.set(name, new Map());
+    valuesByField.set(toCustomFieldKey(name), new Map());
   }
 
   let after: string | null = null;
@@ -466,7 +640,7 @@ async function fetchAllCustomFieldValuesFromCollection(
         const value = customField.node?.value?.trim();
         if (!name || !value) continue;
 
-        const fieldCounts = valuesByField.get(name);
+        const fieldCounts = valuesByField.get(toCustomFieldKey(name));
         if (!fieldCounts) continue;
         fieldCounts.set(value, (fieldCounts.get(value) ?? 0) + 1);
       }
@@ -508,7 +682,7 @@ async function fetchWheelFieldOptions(
       wheelSelections,
       availableCustomFieldNames,
     );
-    customFieldCounts = new Map(aggregation.get(field.customFieldName) ?? []);
+    customFieldCounts = new Map(aggregation.get(toCustomFieldKey(field.customFieldName)) ?? []);
   }
 
   return mapCountsToOptions(mergeOptionCounts(customFieldCounts, facetCounts));
@@ -529,6 +703,26 @@ function buildPriorWheelSelections(
   return prior;
 }
 
+function normalizeAttributeValue(value: string): string {
+  const trimmed = value.trim();
+  const num = Number(trimmed);
+  return Number.isFinite(num) && trimmed !== '' ? String(num) : trimmed.toLowerCase();
+}
+
+/**
+ * When a vehicle (YMM) is selected, restrict a field's inventory options to the
+ * OEM fitment values for that attribute (inventory ∩ vehicle). Matching is
+ * numeric-aware so "17" and "17.0" collapse to the same value.
+ */
+function constrainOptionsToOemValues(
+  options: WheelFilterOption[],
+  oemValues: string[] | undefined,
+): WheelFilterOption[] {
+  if (!oemValues?.length) return options;
+  const allowed = new Set(oemValues.map(normalizeAttributeValue));
+  return options.filter((option) => allowed.has(normalizeAttributeValue(option.value)));
+}
+
 export async function getWheelFilterState(
   context: WheelFilterSearchContext,
   selections: WheelFilterSelections,
@@ -539,6 +733,9 @@ export async function getWheelFilterState(
     return { showSection: false, fields: [] };
   }
 
+  const oemValuesByAttribute = new Map(
+    (context.productAttributeFilters ?? []).map((entry) => [entry.attribute, entry.values]),
+  );
   const availableCustomFieldNames = availableFields.map((field) => field.customFieldName);
   const fields: WheelFilterFieldState[] = [];
 
@@ -557,6 +754,7 @@ export async function getWheelFilterState(
         field,
         availableCustomFieldNames,
       );
+      options = constrainOptionsToOemValues(options, oemValuesByAttribute.get(field.attribute));
     }
 
     fields.push({
