@@ -486,7 +486,7 @@ async function fetchProductAttributeFacetOptions(
   const counts = new Map<string, number>();
   let after: string | null = null;
 
-  for (;;) {
+  for (; ;) {
     const afterArg = after ? `, after: ${JSON.stringify(after)}` : '';
     const data = await graphqlFetch(`{
   site {
@@ -584,7 +584,7 @@ async function fetchAllCustomFieldValuesFromCollection(
 
   let after: string | null = null;
 
-  for (;;) {
+  for (; ;) {
     const afterArg = after ? `, after: ${JSON.stringify(after)}` : '';
     const data = await graphqlFetch(`{
   site {

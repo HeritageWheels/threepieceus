@@ -2,8 +2,6 @@ import { findCategoryRouteById, supportsWheelFilters } from './category-routes';
 import { appendVehicleUrlParams, parseVehicleUrlParams } from './vehicle-url-params';
 import {
   appendWheelFilterParams,
-  buildWheelProductAttributes,
-  hasWheelFilterSelections,
   type WheelFilterSelections,
 } from './wheel-filters';
 
@@ -116,7 +114,7 @@ export interface CollectionProductFilters {
   brandEntityIds?: number[];
   stock?: CollectionStockFilter;
   wheelFilters?: WheelFilterSelections;
-  /** Extra productAttributes (e.g. from vehicle OEM fitment). Merged with wheelFilters. */
+  /** PCD-only productAttributes (e.g. vehicle bolt pattern). */
   productAttributes?: ProductAttributeFilter[];
 }
 
@@ -346,13 +344,12 @@ function buildSearchFiltersGraphQL(
     parts.push(`hideOutOfStock: ${isInStockOnly ? 'true' : 'false'}`);
   }
 
-  const attributeEntries = [
-    ...buildWheelProductAttributes(productFilters.wheelFilters ?? {}),
-    ...(productFilters.productAttributes ?? []),
-  ].filter((entry) => entry.values.length > 0);
+  const pcdFilters = (productFilters.productAttributes ?? []).filter(
+    (entry) => entry.attribute === 'PCD' && entry.values.length > 0,
+  );
 
-  if (attributeEntries.length) {
-    const items = attributeEntries
+  if (pcdFilters.length) {
+    const items = pcdFilters
       .map(
         (entry) =>
           `{ attribute: ${JSON.stringify(entry.attribute)}, values: ${JSON.stringify(entry.values)} }`,
@@ -901,8 +898,7 @@ export async function getCollectionProducts(
       (productFilters.categoryEntityIds?.length ?? 0) > 0 ||
       (productFilters.brandEntityIds?.length ?? 0) > 0 ||
       stockSelection.isOutOfStockOnly ||
-      hasWheelFilterSelections(productFilters.wheelFilters ?? {}) ||
-      (productFilters.productAttributes?.length ?? 0) > 0;
+      (productFilters.productAttributes?.some((entry) => entry.attribute === 'PCD') ?? false);
 
     const filteredCount = filteredTotalItems ?? 0;
     const totalItems = hasActiveFilters
