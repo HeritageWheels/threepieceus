@@ -9,6 +9,9 @@ export default defineConfig({
     imageService: true,
     isr: {
       expiration: 60 * 60 * 24,
+      // /api/cart/:id mints a single-use BigCommerce checkout redirect per
+      // click — caching it would serve every visitor the same consumed token.
+      exclude: [/^\/api\/cart\/.+/],
     },
   }),
   image: {
