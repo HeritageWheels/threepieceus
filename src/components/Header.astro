@@ -16,15 +16,76 @@ const navItems = await getNavItems(baseUrl);
   <!-- Desktop: two rows -->
   <div class="site-header__top site-header__top--desktop">
     <div class="site-header__inner">
-      <button type="button" class="site-header__desktop-hamburger" aria-label="Show navigation" id="header-desktop-hamburger">
-        <span class="site-header__hamburger-line"></span>
-        <span class="site-header__hamburger-line"></span>
-        <span class="site-header__hamburger-line"></span>
-      </button>
-      <a href={baseUrl} class="site-header__logo">
-        <img src={logoUrl} alt="threepiece.us" class="site-header__logo-img" width="200" height="90" />
-      </a>
-      <span class="site-header__top-spacer" aria-hidden="true"></span>
+      <div class="site-header__brand">
+        <button type="button" class="site-header__desktop-hamburger" aria-label="Show navigation" id="header-desktop-hamburger">
+          <span class="site-header__hamburger-line"></span>
+          <span class="site-header__hamburger-line"></span>
+          <span class="site-header__hamburger-line"></span>
+        </button>
+        <a href={baseUrl} class="site-header__logo">
+          <img src={logoUrl} alt="threepiece.us" class="site-header__logo-img" width="200" height="90" />
+        </a>
+      </div>
+
+      <form class="site-header__search" role="search" aria-label="Site search" onsubmit="return false;">
+        <label class="visually-hidden" for="header-search-query">Search</label>
+        <span class="site-header__search-icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+        </span>
+        <input
+          id="header-search-query"
+          class="site-header__search-input"
+          type="search"
+          name="search_query"
+          placeholder="What are you looking for?"
+          autocomplete="off"
+        />
+      </form>
+
+      <div class="site-header__utils">
+        <a
+          href="https://www.threepiece.us/compare"
+          class="site-header__util site-header__util--compare"
+          aria-label="Compare products (placeholder)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="1.5" />
+            <path d="M3 9h18M3 13h18M3 17h18" />
+          </svg>
+          <span class="site-header__util-count">(2)</span>
+        </a>
+
+        <span class="site-header__util-divider" aria-hidden="true"></span>
+
+        <div class="site-header__util site-header__util--account">
+          <a href="https://www.threepiece.us/login.php" class="site-header__util-link" aria-label="Sign in">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <span>Sign in</span>
+          </a>
+          <a href="https://www.threepiece.us/login.php?action=create_account" class="site-header__util-link">Register</a>
+        </div>
+
+        <span class="site-header__util-divider" aria-hidden="true"></span>
+
+        <a
+          href="https://www.threepiece.us/cart.php"
+          class="site-header__util site-header__util--cart"
+          aria-label="Cart with 0 items"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 7h15l-1.4 8.2a1.5 1.5 0 0 1-1.5 1.3H8.4a1.5 1.5 0 0 1-1.5-1.2L5.2 4.5A1 1 0 0 0 4.2 3.7H2" />
+            <circle cx="9.5" cy="20" r="1" />
+            <circle cx="17.5" cy="20" r="1" />
+          </svg>
+          <span class="site-header__util-count">(0)</span>
+        </a>
+      </div>
     </div>
   </div>
   <div class="site-header__nav-wrap">
@@ -84,7 +145,7 @@ const navItems = await getNavItems(baseUrl);
           <span class="site-header__panel-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </span>
-          <a href={`${baseUrl}/login.php`}>SIGN IN</a><span class="site-header__auth-sep"> or </span><a href={`${baseUrl}/login.php?action=create_account`}>REGISTER</a>
+          <a href="https://www.threepiece.us/login.php">SIGN IN</a><span class="site-header__auth-sep"> or </span><a href="https://www.threepiece.us/login.php?action=create_account">REGISTER</a>
         </div>
         {navItems.map((item) => {
           const hasSubmenus = item.children.some((c) => c.children.length > 0);
@@ -160,25 +221,41 @@ const navItems = await getNavItems(baseUrl);
   }
 
   .site-header__inner {
-    max-width: 1230px;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -ms-flex-flow: row nowrap;
+    flex-flow: row nowrap;
     margin: 0 auto;
-    padding: 0 15px 0 0;
+    max-width: 1230px;
+    padding: 0 15px;
+    text-align: left;
     width: 100%;
+    box-sizing: border-box;
   }
 
-  /* Desktop */
+  /* Desktop top bar: full-bleed black, content capped at 1230px */
   .site-header__top--desktop {
-    display: flex;
-    align-items: center;
-    justify-content: start;
-    padding: 1rem 1.5rem;
     background-color: #000000;
+    /* Match main site .header-logo--wrap */
+    padding: 20px 0;
   }
 
   .site-header__top--desktop .site-header__inner {
+    gap: 2rem;
+  }
+
+  .site-header__brand {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    gap: 0.5rem;
+    min-width: 0;
+    flex: 0 0 auto;
   }
 
   .site-header__desktop-hamburger {
@@ -191,11 +268,12 @@ const navItems = await getNavItems(baseUrl);
     padding: 0;
     border: none;
     background: none;
-    color: #424242;
+    color: #ffffff;
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
+    flex-shrink: 0;
   }
 
   .site-header__desktop-hamburger .site-header__hamburger-line {
@@ -205,12 +283,104 @@ const navItems = await getNavItems(baseUrl);
     background-color: currentColor;
   }
 
-  .site-header__top-spacer {
-    display: none;
-    width: 44px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
+  .site-header__search {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 45px;
+    padding: 0 1rem;
+    border-radius: 3px;
+    background: #ffffff;
+    color: #6b6b6b;
+  }
+
+  .site-header__search-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: #b0b0b0;
+  }
+
+  .site-header__search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #222;
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.3;
+  }
+
+  .site-header__search-input::placeholder {
+    color: #a3a3a3;
+  }
+
+  .site-header__utils {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    flex: 0 0 auto;
+    color: #ffffff;
+  }
+
+  .site-header__util {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: inherit;
+    text-decoration: none;
+    font-size: 0.8125rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .site-header__util-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .site-header__util-link:hover {
+    text-decoration: none;
+  }
+
+  .site-header__util--compare:hover,
+  .site-header__util--cart:hover {
+    text-decoration: none;
+  }
+
+  .site-header__util--account {
+    gap: 0.65rem;
+  }
+
+  .site-header__util-count {
+    font-size: 0.8125rem;
+    font-weight: 400;
+  }
+
+  .site-header__util-divider {
+    width: 1px;
+    height: 1.25rem;
+    background: rgba(255, 255, 255, 0.45);
+    flex-shrink: 0;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   /* Desktop nav wrapper for smooth collapse */
@@ -231,31 +401,9 @@ const navItems = await getNavItems(baseUrl);
 
   /* Desktop: when scrolled, collapse nav and show hamburger in top bar */
   @media (min-width: 901px) {
-    .site-header__top--desktop .site-header__inner .site-header__logo {
-      align-self: center;
-    }
     .site-header__desktop-hamburger {
       display: flex;
       width: 44px;
-    }
-    .site-header__top-spacer {
-      display: block;
-      width: 44px;
-    }
-    .site-header.is-scrolled .site-header__top--desktop .site-header__inner {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      justify-items: center;
-    }
-    .site-header.is-scrolled .site-header__top--desktop .site-header__inner .site-header__logo {
-      grid-column: 2;
-    }
-    .site-header.is-scrolled .site-header__desktop-hamburger {
-      justify-self: start;
-    }
-    .site-header.is-scrolled .site-header__top-spacer {
-      justify-self: end;
     }
     .site-header:not(.is-scrolled) .site-header__desktop-hamburger {
       width: 0;
@@ -263,25 +411,16 @@ const navItems = await getNavItems(baseUrl);
       padding: 0;
       overflow: hidden;
     }
-    .site-header:not(.is-scrolled) .site-header__top-spacer {
-      width: 0;
-      min-width: 0;
-      overflow: hidden;
+    .site-header.is-scrolled .site-header__desktop-hamburger {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto;
     }
     .site-header__nav-wrap {
       max-height: 100px;
     }
     .site-header.is-scrolled .site-header__nav-wrap {
       max-height: 0;
-    }
-    .site-header.is-scrolled .site-header__desktop-hamburger {
-      display: flex;
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .site-header.is-scrolled .site-header__top-spacer {
-      opacity: 1;
-      pointer-events: auto;
     }
   }
 
@@ -303,17 +442,16 @@ const navItems = await getNavItems(baseUrl);
   @media (min-width: 901px) {
     .site-header__top--desktop .site-header__logo-img {
       height: 45px;
-      width: 100px;      
+      width: 100px;
     }
   }
-
 
   .site-header__nav--desktop {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 1.5rem;
-    padding: 1rem 1.5rem 1rem 0;
+    gap: 0;
+    padding: 0;
     flex-wrap: wrap;
     position: relative;
   }
@@ -330,7 +468,12 @@ const navItems = await getNavItems(baseUrl);
     text-transform: uppercase;
     letter-spacing: 0.02em;
     display: inline-block;
-    padding: 0.25rem 0;
+    /* Match main site .navPages-action vertical rhythm */
+    padding: 15px 1.14286rem;
+  }
+
+  .site-header__nav-item:first-child .site-header__nav-link {
+    padding-left: 0;
   }
 
   .site-header__nav-link:hover {

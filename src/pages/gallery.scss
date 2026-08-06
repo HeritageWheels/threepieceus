@@ -7,12 +7,7 @@ body {
   margin: 0;
 }
 
-// Full-width header & footer on gallery page
-.site-header__inner {
-  max-width: 100%;
-  padding: 0 1.5rem;
-}
-
+// Full-width footer on gallery page (header uses shared 1230px container)
 .site-footer__inner {
   max-width: 100%;
   padding: 0 1.5rem;
