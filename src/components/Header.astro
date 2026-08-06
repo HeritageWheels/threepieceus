@@ -5,11 +5,13 @@ interface Props {
 }
 
 import { getNavItems } from '../lib/nav-items';
+import { getVehicleYears } from '../lib/vehicle-fitment';
 
 const { baseUrl = 'https://threepiece.us' } = Astro.props;
 const logoUrl = 'https://cdn11.bigcommerce.com/s-8zxb6tk/images/stencil/200x90/threepiece-logo_1713917723__25054.original.png';
 
 const navItems = await getNavItems(baseUrl);
+const vehicleYears = await getVehicleYears();
 ---
 
 <header class="site-header">
@@ -57,16 +59,22 @@ const navItems = await getNavItems(baseUrl);
       </form>
 
       <div class="site-header__utils">
-        <a
-          href="https://www.threepiece.us/compare"
-          class="site-header__util site-header__util--compare"
-          aria-label="Compare products (placeholder)"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 302 302" fill="currentColor" aria-hidden="true">
-            <path d="M295 59.886H7a7 7 0 0 0-7 7v168.229a7 7 0 0 0 7 7h26a7 7 0 0 0 7-7v-35.229h34.333v7c0 9.246 6.422 17.001 15.034 19.093.722 3.097 3.494 5.407 6.811 5.407h14.5a7 7 0 0 0 6.654-4.833h67.336a7 7 0 0 0 6.654 4.833h14.5c3.317 0 6.089-2.31 6.811-5.407 8.612-2.091 15.034-9.847 15.034-19.093v-7H262v35.229a7 7 0 0 0 7 7h26a7 7 0 0 0 7-7V66.886a7 7 0 0 0-7-7m-81.333 147a5.673 5.673 0 0 1-5.667 5.667H94a5.673 5.673 0 0 1-5.667-5.667v-7h10.124c.595 3.132 3.343 5.501 6.648 5.501s6.053-2.369 6.649-5.501h78.492c.596 3.132 3.344 5.501 6.649 5.501s6.053-2.369 6.648-5.501h10.124zm7-21H40v-5.333h222v5.333zm41.333-44v5.333H40v-5.333zm0 19.333v5.333H40v-5.333zm0-38.666v5.333H40v-5.333zm0-14H40v-5.667h222zm26 119.561h-12V95.886a7 7 0 0 0-7-7H33a7 7 0 0 0-7 7v132.229H14V73.886h274z"/>
-          </svg>
-          <span class="site-header__util-count">(2)</span>
-        </a>
+        <div class="site-header__garage" data-garage-root>
+          <button
+            type="button"
+            class="site-header__util site-header__util--garage"
+            id="header-garage-toggle"
+            aria-label="Open garage"
+            aria-expanded="false"
+            aria-controls="header-garage-dropdown"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 302 302" fill="currentColor" aria-hidden="true">
+              <path d="M295 59.886H7a7 7 0 0 0-7 7v168.229a7 7 0 0 0 7 7h26a7 7 0 0 0 7-7v-35.229h34.333v7c0 9.246 6.422 17.001 15.034 19.093.722 3.097 3.494 5.407 6.811 5.407h14.5a7 7 0 0 0 6.654-4.833h67.336a7 7 0 0 0 6.654 4.833h14.5c3.317 0 6.089-2.31 6.811-5.407 8.612-2.091 15.034-9.847 15.034-19.093v-7H262v35.229a7 7 0 0 0 7 7h26a7 7 0 0 0 7-7V66.886a7 7 0 0 0-7-7m-81.333 147a5.673 5.673 0 0 1-5.667 5.667H94a5.673 5.673 0 0 1-5.667-5.667v-7h10.124c.595 3.132 3.343 5.501 6.648 5.501s6.053-2.369 6.649-5.501h78.492c.596 3.132 3.344 5.501 6.649 5.501s6.053-2.369 6.648-5.501h10.124zm7-21H40v-5.333h222v5.333zm41.333-44v5.333H40v-5.333zm0 19.333v5.333H40v-5.333zm0-38.666v5.333H40v-5.333zm0-14H40v-5.667h222zm26 119.561h-12V95.886a7 7 0 0 0-7-7H33a7 7 0 0 0-7 7v132.229H14V73.886h274z"/>
+            </svg>
+            <span class="site-header__util-count site-header__garage-count">(0)</span>
+          </button>
+          <div class="site-header__garage-dropdown" id="header-garage-dropdown" hidden></div>
+        </div>
 
         <span class="site-header__util-divider" aria-hidden="true"></span>
 
@@ -143,22 +151,68 @@ const navItems = await getNavItems(baseUrl);
       <img src={logoUrl} alt="threepiece.us" class="site-header__logo-img" width="200" height="90" />
     </a>
     <div class="site-header__mobile-actions">
-      <a
-        href="https://www.threepiece.us/compare"
-        class="site-header__mobile-action site-header__mobile-action--garage"
-        aria-label="Compare vehicles (2)"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 302 302" fill="currentColor" aria-hidden="true">
-          <path d="M295 59.886H7a7 7 0 0 0-7 7v168.229a7 7 0 0 0 7 7h26a7 7 0 0 0 7-7v-35.229h34.333v7c0 9.246 6.422 17.001 15.034 19.093.722 3.097 3.494 5.407 6.811 5.407h14.5a7 7 0 0 0 6.654-4.833h67.336a7 7 0 0 0 6.654 4.833h14.5c3.317 0 6.089-2.31 6.811-5.407 8.612-2.091 15.034-9.847 15.034-19.093v-7H262v35.229a7 7 0 0 0 7 7h26a7 7 0 0 0 7-7V66.886a7 7 0 0 0-7-7m-81.333 147a5.673 5.673 0 0 1-5.667 5.667H94a5.673 5.673 0 0 1-5.667-5.667v-7h10.124c.595 3.132 3.343 5.501 6.648 5.501s6.053-2.369 6.649-5.501h78.492c.596 3.132 3.344 5.501 6.649 5.501s6.053-2.369 6.648-5.501h10.124zm7-21H40v-5.333h222v5.333zm41.333-44v5.333H40v-5.333zm0 19.333v5.333H40v-5.333zm0-38.666v5.333H40v-5.333zm0-14H40v-5.667h222zm26 119.561h-12V95.886a7 7 0 0 0-7-7H33a7 7 0 0 0-7 7v132.229H14V73.886h274z"/>
-        </svg>
-        <span class="site-header__util-count">(2)</span>
-      </a>
+      <div class="site-header__garage site-header__garage--mobile" data-garage-root>
+        <button
+          type="button"
+          class="site-header__mobile-action site-header__mobile-action--garage"
+          id="header-mobile-garage-toggle"
+          aria-label="Open garage"
+          aria-expanded="false"
+          aria-controls="header-mobile-garage-dropdown"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 302 302" fill="currentColor" aria-hidden="true">
+            <path d="M295 59.886H7a7 7 0 0 0-7 7v168.229a7 7 0 0 0 7 7h26a7 7 0 0 0 7-7v-35.229h34.333v7c0 9.246 6.422 17.001 15.034 19.093.722 3.097 3.494 5.407 6.811 5.407h14.5a7 7 0 0 0 6.654-4.833h67.336a7 7 0 0 0 6.654 4.833h14.5c3.317 0 6.089-2.31 6.811-5.407 8.612-2.091 15.034-9.847 15.034-19.093v-7H262v35.229a7 7 0 0 0 7 7h26a7 7 0 0 0 7-7V66.886a7 7 0 0 0-7-7m-81.333 147a5.673 5.673 0 0 1-5.667 5.667H94a5.673 5.673 0 0 1-5.667-5.667v-7h10.124c.595 3.132 3.343 5.501 6.648 5.501s6.053-2.369 6.649-5.501h78.492c.596 3.132 3.344 5.501 6.649 5.501s6.053-2.369 6.648-5.501h10.124zm7-21H40v-5.333h222v5.333zm41.333-44v5.333H40v-5.333zm0 19.333v5.333H40v-5.333zm0-38.666v5.333H40v-5.333zm0-14H40v-5.667h222zm26 119.561h-12V95.886a7 7 0 0 0-7-7H33a7 7 0 0 0-7 7v132.229H14V73.886h274z"/>
+          </svg>
+          <span class="site-header__util-count site-header__garage-count">(0)</span>
+        </button>
+        <div class="site-header__garage-dropdown site-header__garage-dropdown--mobile" id="header-mobile-garage-dropdown" hidden></div>
+      </div>
       <button type="button" class="site-header__mobile-action site-header__mobile-action--search" id="header-mobile-search-open" aria-label="Open search">
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7" />
           <path d="m21 21-4.3-4.3" />
         </svg>
       </button>
+    </div>
+  </div>
+
+  <!-- Select Your Vehicle modal -->
+  <div class="site-header__vehicle-modal" id="header-vehicle-modal" hidden aria-hidden="true">
+    <div class="site-header__vehicle-modal-backdrop" data-vehicle-modal-close></div>
+    <div class="site-header__vehicle-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="header-vehicle-modal-title">
+      <div class="site-header__vehicle-modal-header">
+        <h2 class="site-header__vehicle-modal-title" id="header-vehicle-modal-title">Select Your Vehicle</h2>
+        <button type="button" class="site-header__vehicle-modal-x" data-vehicle-modal-close aria-label="Close">×</button>
+      </div>
+      <form class="site-header__vehicle-modal-form" id="header-vehicle-form">
+        <label class="visually-hidden" for="garage-filter-year">Year</label>
+        <select id="garage-filter-year" class="site-header__vehicle-modal-select">
+          <option value="">Year</option>
+          {vehicleYears.map((year) => (
+            <option value={year}>{year}</option>
+          ))}
+        </select>
+        <label class="visually-hidden" for="garage-filter-make">Make</label>
+        <select id="garage-filter-make" class="site-header__vehicle-modal-select" disabled>
+          <option value="">Make</option>
+        </select>
+        <label class="visually-hidden" for="garage-filter-model">Model</label>
+        <select id="garage-filter-model" class="site-header__vehicle-modal-select" disabled>
+          <option value="">Model</option>
+        </select>
+        <label class="visually-hidden" for="garage-filter-body">Body Type</label>
+        <select id="garage-filter-body" class="site-header__vehicle-modal-select" disabled>
+          <option value="">Body Type</option>
+        </select>
+        <label class="visually-hidden" for="garage-filter-submodel">Submodel</label>
+        <select id="garage-filter-submodel" class="site-header__vehicle-modal-select" disabled>
+          <option value="">Submodel</option>
+        </select>
+        <div class="site-header__vehicle-modal-actions">
+          <button type="submit" class="site-header__vehicle-modal-go" id="header-vehicle-go" disabled>GO</button>
+          <button type="button" class="site-header__vehicle-modal-clear" id="header-vehicle-clear">CLEAR</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -549,9 +603,285 @@ const navItems = await getNavItems(baseUrl);
     text-decoration: none;
   }
 
-  .site-header__util--compare:hover,
+  .site-header__util--garage {
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .site-header__util--garage:hover,
   .site-header__util--cart:hover {
     text-decoration: none;
+  }
+
+  .site-header__garage {
+    position: relative;
+  }
+
+  .site-header__garage-dropdown {
+    box-sizing: border-box;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    z-index: 100;
+    width: 270px;
+    min-width: 250px;
+    max-width: 300px;
+    padding: 15px;
+    background: #fff;
+    color: #222;
+    border: 1px solid #dadada;
+    border-radius: 0;
+    box-shadow: none;
+    text-align: left;
+  }
+
+  .site-header__garage-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 18px;
+    width: 10px;
+    height: 10px;
+    background: #fff;
+    border-top: 1px solid #dadada;
+    border-left: 1px solid #dadada;
+    transform: rotate(45deg);
+  }
+
+  .site-header__garage-dropdown--mobile {
+    right: 0;
+    left: auto;
+    width: min(270px, calc(100vw - 1.5rem));
+  }
+
+  .site-header__garage-dropdown--mobile::before {
+    right: 36px;
+  }
+
+  .site-header__garage-dropdown.is-empty {
+    background: #fff;
+    border-color: #dadada;
+    color: #222;
+  }
+
+  .site-header__garage-clear {
+    display: block;
+    width: 100%;
+    margin: 0 0 12px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #222;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-align: right;
+    cursor: pointer;
+  }
+
+  .site-header__garage-list {
+    list-style: none;
+    margin: 0 0 14px;
+    padding: 0;
+  }
+
+  .site-header__garage-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 2px 0;
+    font-size: 14px;
+    line-height: 1.35;
+    color: #222;
+  }
+
+  .site-header__garage-item-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .site-header__garage-item-remove {
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: none;
+    background: none;
+    color: #b0b0b0;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .site-header__garage-item-remove:hover {
+    color: #666;
+  }
+
+  .site-header__garage-add {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 2px;
+    background: #4a6cf7;
+    color: #fff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .site-header__garage-add:hover {
+    background: #3b5de7;
+  }
+
+  .site-header__garage-benefits {
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #222;
+    text-align: left;
+  }
+
+  .site-header__garage-benefits li {
+    margin: 0;
+  }
+
+  .site-header__vehicle-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .site-header__vehicle-modal[hidden] {
+    display: none;
+  }
+
+  .site-header__vehicle-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .site-header__vehicle-modal-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(420px, 100%);
+    padding: 1.25rem 1.25rem 1.35rem;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+  }
+
+  .site-header__vehicle-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .site-header__vehicle-modal-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #111;
+  }
+
+  .site-header__vehicle-modal-x {
+    border: none;
+    background: none;
+    padding: 0;
+    margin: -0.25rem 0 0;
+    color: #888;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .site-header__vehicle-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .site-header__vehicle-modal-select {
+    width: 100%;
+    height: 44px;
+    padding: 0 0.85rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 2px;
+    background: #fff;
+    color: #222;
+    font-family: inherit;
+    font-size: 0.9375rem;
+  }
+
+  .site-header__vehicle-modal-select:disabled {
+    color: #999;
+    background: #f7f7f7;
+  }
+
+  .site-header__vehicle-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    margin-top: 0.35rem;
+  }
+
+  .site-header__vehicle-modal-go,
+  .site-header__vehicle-modal-clear {
+    height: 44px;
+    border-radius: 2px;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .site-header__vehicle-modal-go {
+    border: none;
+    background: #4a6cf7;
+    color: #fff;
+  }
+
+  .site-header__vehicle-modal-go:hover:not(:disabled) {
+    background: #3b5de7;
+  }
+
+  .site-header__vehicle-modal-go:disabled {
+    background: #cfcfcf;
+    color: #fff;
+    cursor: not-allowed;
+  }
+
+  .site-header__vehicle-modal-clear {
+    border: 1px solid #dc2626;
+    background: #fff;
+    color: #dc2626;
+  }
+
+  .site-header__vehicle-modal-clear:hover {
+    border-color: #b91c1c;
+    color: #b91c1c;
   }
 
   .site-header__util--account {
@@ -850,6 +1180,7 @@ const navItems = await getNavItems(baseUrl);
   }
 
   .site-header__mobile-actions {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -1712,4 +2043,350 @@ const navItems = await getNavItems(baseUrl);
 
   initHeaderSearch();
   document.addEventListener('astro:page-load', initHeaderSearch);
+</script>
+
+<script>
+  import {
+    getGarage,
+    clearGarage,
+    removeVehicleAt,
+    addVehicleFromYmm,
+    vehicleLabel,
+    GARAGE_UPDATED_EVENT,
+  } from '../lib/garage';
+
+  function escapeHtml(text: string): string {
+    return String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function updateCounts() {
+    const n = getGarage().length;
+    document.querySelectorAll('.site-header__garage-count').forEach((el) => {
+      el.textContent = `(${n})`;
+    });
+  }
+
+  function renderDropdown(panel: HTMLElement) {
+    const garage = getGarage();
+    if (!garage.length) {
+      panel.classList.add('is-empty');
+      panel.innerHTML =
+        '<button type="button" class="site-header__garage-add" data-garage-add>ADD A VEHICLE</button>' +
+        '<ul class="site-header__garage-benefits">' +
+        '<li>Store your vehicle in the garage</li>' +
+        '<li>Get products for your vehicle</li>' +
+        '<li>Easily find the parts you need</li>' +
+        '</ul>';
+      return;
+    }
+
+    panel.classList.remove('is-empty');
+    let html =
+      '<button type="button" class="site-header__garage-clear" data-garage-clear>Clear garage</button>' +
+      '<ul class="site-header__garage-list">';
+    garage.forEach((vehicle, index) => {
+      html +=
+        '<li class="site-header__garage-item">' +
+        '<span class="site-header__garage-item-label">' +
+        escapeHtml(vehicleLabel(vehicle)) +
+        '</span>' +
+        '<button type="button" class="site-header__garage-item-remove" data-garage-remove="' +
+        index +
+        '" aria-label="Remove vehicle">×</button>' +
+        '</li>';
+    });
+    html +=
+      '</ul><button type="button" class="site-header__garage-add" data-garage-add>ADD A VEHICLE</button>';
+    panel.innerHTML = html;
+  }
+
+  function closeAllDropdowns() {
+    document.querySelectorAll<HTMLElement>('.site-header__garage-dropdown').forEach((panel) => {
+      panel.hidden = true;
+    });
+    document
+      .querySelectorAll('#header-garage-toggle, #header-mobile-garage-toggle')
+      .forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
+  }
+
+  function openDropdown(toggle: HTMLElement, panel: HTMLElement) {
+    closeAllDropdowns();
+    renderDropdown(panel);
+    panel.hidden = false;
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+
+  function populateSelect(
+    sel: HTMLSelectElement,
+    options: string[],
+    placeholder: string,
+    disabled = false
+  ) {
+    sel.innerHTML = '';
+    const defaultOpt = document.createElement('option');
+    defaultOpt.value = '';
+    defaultOpt.textContent = placeholder;
+    sel.appendChild(defaultOpt);
+    options.forEach((val) => {
+      const opt = document.createElement('option');
+      opt.value = val;
+      opt.textContent = val;
+      sel.appendChild(opt);
+    });
+    sel.disabled = disabled || options.length === 0;
+    sel.value = '';
+  }
+
+  async function fetchJsonList(url: string, key: string): Promise<string[]> {
+    try {
+      const res = await fetch(url);
+      const data = await res.json().catch(() => ({}));
+      return Array.isArray(data[key]) ? data[key] : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function initHeaderGarage() {
+    const yearSel = document.getElementById('garage-filter-year') as HTMLSelectElement | null;
+    const makeSel = document.getElementById('garage-filter-make') as HTMLSelectElement | null;
+    const modelSel = document.getElementById('garage-filter-model') as HTMLSelectElement | null;
+    const bodySel = document.getElementById('garage-filter-body') as HTMLSelectElement | null;
+    const submodelSel = document.getElementById(
+      'garage-filter-submodel'
+    ) as HTMLSelectElement | null;
+    const goBtn = document.getElementById('header-vehicle-go') as HTMLButtonElement | null;
+    const clearBtn = document.getElementById('header-vehicle-clear');
+    const form = document.getElementById('header-vehicle-form') as HTMLFormElement | null;
+    const modal = document.getElementById('header-vehicle-modal');
+    const desktopToggle = document.getElementById('header-garage-toggle');
+    const desktopPanel = document.getElementById('header-garage-dropdown');
+    const mobileToggle = document.getElementById('header-mobile-garage-toggle');
+    const mobilePanel = document.getElementById('header-mobile-garage-dropdown');
+
+    if (!modal || !yearSel || !makeSel || !modelSel || !bodySel || !submodelSel || !form) return;
+    if ((modal as HTMLElement).dataset.garageBound === 'true') {
+      updateCounts();
+      return;
+    }
+    (modal as HTMLElement).dataset.garageBound = 'true';
+
+    function syncGo() {
+      if (!goBtn) return;
+      goBtn.disabled = !(
+        yearSel!.value &&
+        makeSel!.value &&
+        modelSel!.value &&
+        bodySel!.value &&
+        submodelSel!.value
+      );
+    }
+
+    function resetDownstreamFromYear() {
+      populateSelect(makeSel!, [], 'Make', true);
+      populateSelect(modelSel!, [], 'Model', true);
+      populateSelect(bodySel!, [], 'Body Type', true);
+      populateSelect(submodelSel!, [], 'Submodel', true);
+      syncGo();
+    }
+
+    function resetModalSelects() {
+      yearSel!.value = '';
+      resetDownstreamFromYear();
+    }
+
+    function openVehicleModal() {
+      closeAllDropdowns();
+      resetModalSelects();
+      modal!.hidden = false;
+      modal!.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeVehicleModal() {
+      if (!modal || modal.hidden) return;
+      modal.hidden = true;
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    yearSel.addEventListener('change', async () => {
+      const year = yearSel.value;
+      resetDownstreamFromYear();
+      if (!year) return;
+      const makes = await fetchJsonList(
+        `/api/vehicle-makes?year=${encodeURIComponent(year)}`,
+        'makes'
+      );
+      populateSelect(makeSel!, makes, 'Make', false);
+      syncGo();
+    });
+
+    makeSel.addEventListener('change', async () => {
+      const year = yearSel.value;
+      const make = makeSel.value;
+      populateSelect(modelSel!, [], 'Model', true);
+      populateSelect(bodySel!, [], 'Body Type', true);
+      populateSelect(submodelSel!, [], 'Submodel', true);
+      syncGo();
+      if (!year || !make) return;
+      const models = await fetchJsonList(
+        `/api/vehicle-models?year=${encodeURIComponent(year)}&make=${encodeURIComponent(make)}`,
+        'models'
+      );
+      populateSelect(modelSel!, models, 'Model', false);
+      syncGo();
+    });
+
+    modelSel.addEventListener('change', async () => {
+      const year = yearSel.value;
+      const make = makeSel.value;
+      const model = modelSel.value;
+      populateSelect(bodySel!, [], 'Body Type', true);
+      populateSelect(submodelSel!, [], 'Submodel', true);
+      syncGo();
+      if (!year || !make || !model) return;
+      const bodyTypes = await fetchJsonList(
+        `/api/vehicle-body-types?year=${encodeURIComponent(year)}&make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}`,
+        'bodyTypes'
+      );
+      populateSelect(bodySel!, bodyTypes, 'Body Type', false);
+      syncGo();
+    });
+
+    bodySel.addEventListener('change', async () => {
+      const year = yearSel.value;
+      const make = makeSel.value;
+      const model = modelSel.value;
+      const bodyType = bodySel.value;
+      populateSelect(submodelSel!, [], 'Submodel', true);
+      syncGo();
+      if (!year || !make || !model || !bodyType) return;
+      const subModels = await fetchJsonList(
+        `/api/vehicle-submodels?year=${encodeURIComponent(year)}&make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&bodyType=${encodeURIComponent(bodyType)}`,
+        'subModels'
+      );
+      populateSelect(submodelSel!, subModels, 'Submodel', false);
+      syncGo();
+    });
+
+    submodelSel.addEventListener('change', syncGo);
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (
+        !yearSel.value ||
+        !makeSel.value ||
+        !modelSel.value ||
+        !bodySel.value ||
+        !submodelSel.value
+      ) {
+        return;
+      }
+      addVehicleFromYmm({
+        year: yearSel.value,
+        make: makeSel.value,
+        model: modelSel.value,
+        submodel: submodelSel.value,
+      });
+      updateCounts();
+      closeVehicleModal();
+    });
+
+    clearBtn?.addEventListener('click', () => {
+      resetModalSelects();
+    });
+
+    modal.querySelectorAll('[data-vehicle-modal-close]').forEach((el) => {
+      el.addEventListener('click', closeVehicleModal);
+    });
+
+    function bindToggle(toggle: HTMLElement | null, panel: HTMLElement | null) {
+      if (!toggle || !panel) return;
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (panel.hidden) {
+          openDropdown(toggle, panel);
+        } else {
+          closeAllDropdowns();
+        }
+      });
+
+      panel.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('[data-garage-add]')) {
+          e.preventDefault();
+          openVehicleModal();
+          return;
+        }
+        if (target.closest('[data-garage-clear]')) {
+          e.preventDefault();
+          clearGarage();
+          updateCounts();
+          renderDropdown(panel);
+          return;
+        }
+        const removeBtn = target.closest('[data-garage-remove]') as HTMLElement | null;
+        if (removeBtn) {
+          e.preventDefault();
+          const index = Number(removeBtn.getAttribute('data-garage-remove'));
+          removeVehicleAt(index);
+          updateCounts();
+          renderDropdown(panel);
+        }
+      });
+    }
+
+    bindToggle(desktopToggle, desktopPanel);
+    bindToggle(mobileToggle, mobilePanel);
+
+    if (!(window as unknown as { __garageGlobalBound?: boolean }).__garageGlobalBound) {
+      (window as unknown as { __garageGlobalBound?: boolean }).__garageGlobalBound = true;
+
+      document.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const inside = target.closest?.('[data-garage-root]');
+        if (!inside) closeAllDropdowns();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        closeAllDropdowns();
+        const openModal = document.getElementById('header-vehicle-modal');
+        if (openModal && !openModal.hidden) {
+          openModal.hidden = true;
+          openModal.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+        }
+      });
+
+      window.addEventListener(GARAGE_UPDATED_EVENT, () => {
+        updateCounts();
+        document.querySelectorAll<HTMLElement>('.site-header__garage-dropdown').forEach((panel) => {
+          if (!panel.hidden) renderDropdown(panel);
+        });
+      });
+
+      window.addEventListener('gallery-ymm-selected', ((e: CustomEvent) => {
+        const detail = e.detail || {};
+        if (!detail.year || !detail.make || !detail.model) return;
+        addVehicleFromYmm({
+          year: detail.year,
+          make: detail.make,
+          model: detail.model,
+          submodel: detail.submodel || 'Base',
+        });
+        updateCounts();
+      }) as EventListener);
+    }
+
+    updateCounts();
+  }
+
+  initHeaderGarage();
+  document.addEventListener('astro:page-load', initHeaderGarage);
 </script>

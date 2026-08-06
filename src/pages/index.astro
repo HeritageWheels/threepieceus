@@ -528,6 +528,25 @@ const mobileFilters = [
     yearSelect.addEventListener('change', applyFilters);
   }
 
+  function syncGarageFromGalleryFilters() {
+    if (!makeSelect || !modelSelect || !yearSelect) return;
+    var make = makeSelect.value;
+    var model = modelSelect.value;
+    var year = yearSelect.value;
+    if (!make || !model || !year) return;
+    window.dispatchEvent(
+      new CustomEvent('gallery-ymm-selected', {
+        detail: { year: year, make: make, model: model, submodel: 'Base' },
+      })
+    );
+  }
+
+  if (makeSelect && modelSelect && yearSelect) {
+    makeSelect.addEventListener('change', syncGarageFromGalleryFilters);
+    modelSelect.addEventListener('change', syncGarageFromGalleryFilters);
+    yearSelect.addEventListener('change', syncGarageFromGalleryFilters);
+  }
+
   var allVehicles = JSON.parse(document.getElementById('vehicles-data').textContent);
   var grid = document.getElementById('gallery-grid');
   var resultsCount = document.getElementById('results-count');
@@ -839,5 +858,6 @@ const mobileFilters = [
   // ── Restore filters from URL on page load ──
   restoreFiltersFromUrl();
   applyFilters(false);
+  syncGarageFromGalleryFilters();
 })();
 </script>
