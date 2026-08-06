@@ -167,7 +167,12 @@ const navItems = await getNavItems(baseUrl);
   <!-- Mobile search modal -->
   <div class="site-header__search-modal" id="header-search-modal" hidden aria-hidden="true">
     <div class="site-header__search-modal-panel">
-      <h2 class="site-header__search-modal-title">SEARCH</h2>
+      <div class="site-header__search-modal-header">
+        <h2 class="site-header__search-modal-title">SEARCH</h2>
+        <button type="button" class="site-header__search-modal-close" id="header-mobile-search-close" aria-label="Close search">
+          ×
+        </button>
+      </div>
       <form class="site-header__search-modal-form" id="header-mobile-search-form" role="search">
         <div class="site-header__search-modal-field">
           <input
@@ -891,12 +896,36 @@ const navItems = await getNavItems(baseUrl);
     padding: 1rem 0 2rem;
   }
 
-  .site-header__search-modal-title {
+  .site-header__search-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
     margin: 0 1rem 0.75rem;
+  }
+
+  .site-header__search-modal-title {
+    margin: 0;
     font-size: 1.125rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+    color: #111;
+  }
+
+  .site-header__search-modal-close {
+    border: none;
+    background: none;
+    padding: 0.25rem 0.15rem;
+    margin: 0;
+    color: #666;
+    font-family: inherit;
+    font-size: 2.25rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .site-header__search-modal-close:hover {
     color: #111;
   }
 
@@ -1312,6 +1341,7 @@ const navItems = await getNavItems(baseUrl);
     var clearBtn = document.getElementById('header-search-clear');
     var dropdown = document.getElementById('header-search-dropdown');
     var mobileOpen = document.getElementById('header-mobile-search-open');
+    var mobileClose = document.getElementById('header-mobile-search-close');
     var modal = document.getElementById('header-search-modal');
     var mobileForm = document.getElementById('header-mobile-search-form');
     var mobileInput = document.getElementById('header-mobile-search-query');
@@ -1647,6 +1677,10 @@ const navItems = await getNavItems(baseUrl);
 
     if (mobileOpen) {
       mobileOpen.addEventListener('click', openMobileSearch);
+    }
+
+    if (mobileClose) {
+      mobileClose.addEventListener('click', closeMobileSearch);
     }
 
     if (mobileForm && mobileInput) {
